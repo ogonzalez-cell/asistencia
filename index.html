@@ -157,7 +157,7 @@ body.ro .owner-only{display:none!important}
     <div class="meter" id="meter"></div>
 
     <ul class="roster" id="roster"></ul>
-    <p class="hint muted">Toca un nombre para cambiar: presente → falta → justificada → sin marcar. Toca «Físico» si también hace físico ese día.</p>
+    <p class="hint muted">Toca un nombre para cambiar: presente → falta → justificada → sin marcar. «Físico» aparece en los entrenos de lunes y miércoles.</p>
     <div class="actions">
       <button class="btn primary" id="allP">Marcar todos presentes</button>
       <button class="btn" id="clear">Borrar esta sesión</button>
@@ -189,7 +189,6 @@ body.ro .owner-only{display:none!important}
       <button class="btn primary" id="expRaw">Registro completo (CSV)</button>
       <button class="btn" id="expSum">Resumen por persona (CSV)</button>
       <button class="btn" id="expWeek">Resumen semanal (CSV)</button>
-      <button class="btn owner-only" id="expPub">Descargar versión pública (GitHub)</button>
     </div>
     <p class="hint muted">Los CSV se abren en Excel, Numbers o Google Sheets. Respetan los filtros de arriba.</p>
 
@@ -202,6 +201,7 @@ body.ro .owner-only{display:none!important}
     <h1 class="big" style="font-size:2.1rem;margin:6px 0 12px">Equipo</h1>
     <ul class="roster team" id="team"></ul>
     <div class="actions"><button class="btn" id="addP">Añadir persona</button></div>
+    <div class="actions"><button class="btn danger" id="logout">Salir del modo edición en este dispositivo</button></div>
     <p class="hint muted">Los cambios de nombre se guardan solos. Si quitas a alguien, su historial se conserva en los CSV.</p>
   </section>
 </div>
@@ -232,13 +232,27 @@ function fmtShort(iso){return new Date(iso+'T12:00:00').toLocaleDateString('es-E
 function sid(){return cur.date+'_'+cur.type}
 function active(){return players.filter(p=>p.active!==false)}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
-let artifactNs=null, downloads=null, canEdit=false, dirty=false;
-const SHELL=document.getElementById('app').outerHTML;
-const CSS=document.getElementById('css').textContent;
-const SRC=document.currentScript.textContent;
-const DATA=(()=>{try{return JSON.parse($('data').textContent)}catch(e){return{rev:0,sessions:{}}}})();
-if(DATA.players&&DATA.players.length)players=DATA.players;
-sessions=DATA.sessions||{};
+const OWNER='ogonzalez-cell',REPO='asistencia',API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/data.json';
+const TK='asistencia-gh-token';
+let downloads=null, canEdit=false, dirty=false;
+let DATA=(()=>{try{return JSON.parse($('data').textContent)}catch(e){return{rev:0,sessions:{}}}})();
+function applyData(d){DATA=d;if(d.players&&d.players.length)players=d.players.map(p=>({...p}));sessions=JSON.parse(JSON.stringify(d.sessions||{}))}
+applyData(DATA);
+function token(){try{return localStorage.getItem(TK)}catch(e){return null}}
+function b64(s){return btoa(unescape(encodeURIComponent(s)))}
+function unb64(s){return decodeURIComponent(escape(atob(s.replace(/\s/g,''))))}
+async function fetchRemote(t){
+  const hd={'Accept':'application/vnd.github+json'};if(t)hd.Authorization='Bearer '+t;
+  const r=await fetch(API+'?ref=main&t='+Date.now(),{headers:hd,cache:'no-store'});
+  if(r.status===404)return{data:null,sha:null};
+  if(!r.ok)throw new Error('http '+r.status);
+  const j=await r.json();return{data:JSON.parse(unb64(j.content)),sha:j.sha};
+}
+async function loadRemote(){
+  try{const r=await fetchRemote(token());if(r.data){applyData(r.data);return true}}
+  catch(e){try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(r.ok){applyData(await r.json());return true}}catch(e2){}}
+  return false;
+}
 
 /* ---------- guardado ---------- */
 function snapshot(){const s={};Object.values(sessions).forEach(x=>{if(Object.keys(x.marks||{}).length||Object.keys(x.fis||{}).length)s[x.id]=x});return s}
@@ -251,57 +265,63 @@ function saveTeam(){markDirty()}
 function loadDraft(){
   try{const d=JSON.parse(localStorage.getItem(LS));if(d&&d.base===DATA.rev){players=d.players;sessions=d.sessions||{};markDirty()}}catch(e){}
 }
-function buildDoc(ro){
-  const data={rev:(DATA.rev||0)+(ro?0:1),updated:new Date().toISOString(),players,sessions:snapshot()};if(ro)data.readonly=true;
-  const json=JSON.stringify(data).replace(/</g,'\\u003c');
-  const S='scr'+'ipt';
-  return '<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'+
-    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'+
-    '<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Asistencia">\n'+
-    '<title>Asistencia del equipo</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n'+
-    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'+
-    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">\n'+
-    '<style id="css">'+CSS+'</style>\n</head>\n<body>\n'+SHELL+'\n'+
-    '<'+S+' type="application/json" id="data">'+json+'</'+S+'>\n<'+S+'>'+SRC+'</'+S+'>\n</body>\n</html>\n';
-}
+function updatedTxt(){return DATA.updated?' · actualizado '+new Date(DATA.updated).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}
 function setReadOnly(){
   canEdit=false;dirty=false;document.body.classList.add('ro');$('savebar').classList.add('hidden');
-  $('sync').textContent='Solo lectura'+(DATA.updated?' · actualizado '+new Date(DATA.updated).toLocaleDateString('es-ES',{day:'numeric',month:'short'}):'');
-  if(view!=='stats')show('stats');
+  $('sync').textContent='Solo lectura'+updatedTxt();
+  if(view!=='stats')show('stats');else renderAll();
 }
-function setEditor(local){
+function setEditor(){
   canEdit=true;document.body.classList.remove('ro');loadDraft();
-  $('sync').textContent=local?'Vista previa: los cambios solo se guardan en este dispositivo':'Modo edición · pulsa Guardar para publicar';
+  $('sync').textContent='Modo edición'+updatedTxt();
   show('lista');
 }
 $('save').onclick=async()=>{
-  if(!artifactNs){try{localStorage.setItem(LS,JSON.stringify({base:DATA.rev,players,sessions}))}catch(e){};toast('Guardado en este dispositivo');return}
+  const t=token();if(!t){toast('Falta el token de edición');return}
   $('save').disabled=true;$('saveTxt').textContent='Guardando…';
-  try{await artifactNs.publish(buildDoc());$('saveTxt').textContent='Guardado'}
-  catch(e){
-    $('save').disabled=false;$('saveTxt').textContent='Cambios sin guardar';
-    const c=e&&e.code;
-    if(c==='not_writer'||c==='not_granted'){toast('Esta vista es de solo lectura');setReadOnly()}
-    else if(c==='conflict')toast('Había una versión más nueva; recargando');
-    else toast('No se pudo guardar, inténtalo de nuevo');
-  }
+  try{
+    const cur=await fetchRemote(t);
+    const remoteRev=(cur.data&&cur.data.rev)||0;
+    if(remoteRev>(DATA.rev||0)&&!confirm('Hay una versión más reciente guardada desde otro dispositivo. ¿Sobrescribirla con tus cambios?')){$('saveTxt').textContent='Cambios sin guardar';return}
+    const data={rev:Math.max(DATA.rev||0,remoteRev)+1,updated:new Date().toISOString(),players,sessions:snapshot()};
+    const body={message:'Asistencia '+new Date().toLocaleString('es-ES'),content:b64(JSON.stringify(data,null,1)),branch:'main'};
+    if(cur.sha)body.sha=cur.sha;
+    const r=await fetch(API,{method:'PUT',headers:{Authorization:'Bearer '+t,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(r.status===401||r.status===403){toast('Token no válido o caducado');$('saveTxt').textContent='Cambios sin guardar';return}
+    if(!r.ok)throw new Error('http '+r.status);
+    try{localStorage.removeItem(LS)}catch(e){}
+    applyData(data);dirty=false;$('savebar').classList.add('hidden');
+    $('sync').textContent='Modo edición'+updatedTxt();toast('Guardado y publicado');renderAll();
+  }catch(e){toast('No se pudo guardar, revisa la conexión');$('saveTxt').textContent='Cambios sin guardar'}
+  finally{$('save').disabled=false}
 };
 $('discard').onclick=()=>{
   if(!confirm('¿Descartar los cambios sin guardar?'))return;
   try{localStorage.removeItem(LS)}catch(e){}
-  players=DATA.players&&DATA.players.length?DATA.players:players;sessions=JSON.parse(JSON.stringify(DATA.sessions||{}));
-  dirty=false;$('savebar').classList.add('hidden');renderAll();
+  applyData(DATA);dirty=false;$('savebar').classList.add('hidden');renderAll();
+};
+$('logout').onclick=()=>{
+  if(!confirm('¿Quitar el modo edición de este dispositivo? Tendrás que volver a pegar el token para editar.'))return;
+  try{localStorage.removeItem(TK)}catch(e){}
+  setReadOnly();
 };
 window.addEventListener('beforeunload',e=>{if(dirty&&canEdit){e.preventDefault();e.returnValue=''}});
+document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!dirty){if(await loadRemote()){$('sync').textContent=(canEdit?'Modo edición':'Solo lectura')+updatedTxt();renderAll()}}});
 
 async function connect(){
-  if(DATA.readonly){setReadOnly();return}
-  if(!window.claude||!window.claude.use){setEditor(true);return}
-  const [a,d,u]=await Promise.all(['artifact','downloads','user'].map(n=>window.claude.use(n).catch(()=>null)));
-  artifactNs=a;downloads=d;
-  let ok=false;
-  if(u){try{ok=!!(await u.canEdit())}catch(e){}}
-  if(ok&&artifactNs)setEditor(false);else setReadOnly();
+  if(location.hash==='#editar'&&!token()){
+    const t=(prompt('Pega tu token de GitHub (solo la primera vez en este dispositivo)')||'').trim();
+    if(t){
+      try{const r=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO,{headers:{Authorization:'Bearer '+t,'Accept':'application/vnd.github+json'}});
+        const j=await r.json();
+        if(r.ok&&(!j.permissions||j.permissions.push)){try{localStorage.setItem(TK,t)}catch(e){};toast('Modo edición activado')}
+        else alert('Ese token no tiene permiso de escritura en el repositorio "asistencia".');
+      }catch(e){alert('No se pudo comprobar el token. Revisa la conexión.')}
+    }
+    history.replaceState(null,'',location.pathname);
+  }
+  await loadRemote();
+  if(token())setEditor();else setReadOnly();
 }
 
 /* ---------- Semanas ---------- */
@@ -309,6 +329,7 @@ function weekStart(iso){const d=new Date(iso+'T12:00:00');const wd=(d.getDay()+3
 function weekLabel(ws){const we=shiftDay(ws,6),a=new Date(ws+'T12:00:00'),b=new Date(we+'T12:00:00');
   const m=x=>x.toLocaleDateString('es-ES',{month:'short'}).replace('.','');
   return a.getMonth()===b.getMonth()?a.getDate()+'–'+b.getDate()+' '+m(b):a.getDate()+' '+m(a)+' – '+b.getDate()+' '+m(b)}
+function fisApplies(s){const d=new Date(s.date+'T12:00:00').getDay();return s.type==='E'&&(d===1||d===3)}
 function hasData(s){return Object.keys(s.marks||{}).length||Object.keys(s.fis||{}).length}
 
 /* ---------- Pasar lista ---------- */
@@ -325,13 +346,13 @@ function renderLista(){
   $('toToday').classList.toggle('hidden',isToday);
   $('dateIn').value=cur.date;
   $('typeSeg').innerHTML=Object.entries(TYPES).map(([k,v])=>`<button aria-pressed="${k===cur.type}" data-t="${k}">${v}</button>`).join('');
-  const s=getSession(false),m=s?s.marks:{},f=(s&&s.fis)||{},list=active();
+  const s=getSession(false),m=s?s.marks:{},f=(s&&s.fis)||{},list=active();const fisOn=fisApplies({date:cur.date,type:cur.type});
   const c={P:0,F:0,J:0};let nf=0;list.forEach(p=>{if(m[p.id])c[m[p.id]]++;if(f[p.id])nf++});
   $('tNum').innerHTML=c.P+'<small>/'+list.length+'</small>';
   $('tTxt').textContent='presentes'+(nf?' · '+nf+' al físico':'')+(c.F?' · '+c.F+' falta'+(c.F>1?'s':''):'')+(c.J?' · '+c.J+' justif.':'');
   const w=n=>(list.length?n/list.length*100:0)+'%';
   $('meter').innerHTML=`<span style="width:${w(c.P)};background:var(--ok)"></span><span style="width:${w(c.J)};background:var(--just)"></span><span style="width:${w(c.F)};background:var(--no)"></span>`;
-  $('roster').innerHTML=list.map(p=>{const st=m[p.id];return `<li class="prow"><button class="row" data-p="${p.id}"><span class="n"></span><span class="pill ${st||''}">${st?LABEL[st]:'Sin marcar'}</span></button><button class="fis" data-f="${p.id}" aria-pressed="${!!f[p.id]}" aria-label="Físico">Físico</button></li>`}).join('');
+  $('roster').innerHTML=list.map(p=>{const st=m[p.id];return `<li class="prow"><button class="row" data-p="${p.id}"><span class="n"></span><span class="pill ${st||''}">${st?LABEL[st]:'Sin marcar'}</span></button>${fisOn?`<button class="fis" data-f="${p.id}" aria-pressed="${!!f[p.id]}" aria-label="Físico">Físico</button>`:''}</li>`}).join('');
   $('roster').querySelectorAll('.row').forEach((b,i)=>b.querySelector('.n').textContent=list[i].name);
 }
 $('roster').addEventListener('click',e=>{
@@ -367,7 +388,7 @@ function filtered(){
   return Object.values(sessions).filter(s=>hasData(s)&&(t==='all'||s.type===t)&&s.date>=from&&s.date<=to).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.type<b.type?-1:1);
 }
 function perPlayer(list){
-  return players.map(p=>{const c={P:0,F:0,J:0};let fis=0;list.forEach(s=>{const v=s.marks[p.id];if(v)c[v]++;if(s.fis&&s.fis[p.id])fis++});const n=c.P+c.F+c.J;return{p,c,n,fis,pct:n?Math.round(c.P/n*100):null}});
+  return players.map(p=>{const c={P:0,F:0,J:0};let fis=0,fisN=0;list.forEach(s=>{const v=s.marks[p.id];if(v)c[v]++;if(fisApplies(s)){if(v==='P')fisN++;if(s.fis&&s.fis[p.id])fis++}});const n=c.P+c.F+c.J;return{p,c,n,fis,fisN,pct:n?Math.round(c.P/n*100):null}});
 }
 function byWeek(list){const g={};list.forEach(s=>{const w=weekStart(s.date);(g[w]=g[w]||[]).push(s)});return Object.keys(g).sort().map(w=>({w,list:g[w]}))}
 function renderStats(){
@@ -380,7 +401,7 @@ function renderStats(){
     rows.sort((a,b)=>(b.pct??-1)-(a.pct??-1));
     $('bars').innerHTML=rows.map(r=>{const w=k=>(r.n?r.c[k]/r.n*100:0)+'%';return `<div class="bar"><div class="top"><span class="nm"></span><b>${r.pct==null?'–':r.pct+'%'}</b></div>
       <div class="track"><span style="width:${w('P')};background:var(--ok)"></span><span style="width:${w('J')};background:var(--just)"></span><span style="width:${w('F')};background:var(--no)"></span></div>
-      <div class="sub">${r.c.P} presente · ${r.c.J} justif. · ${r.c.F} falta · <strong>${r.fis} físico</strong></div></div>`}).join('');
+      <div class="sub">${r.c.P} presente · ${r.c.J} justif. · ${r.c.F} falta · <strong>físico ${r.fis}/${r.fisN}</strong></div></div>`}).join('');
     $('bars').querySelectorAll('.nm').forEach((e,i)=>e.textContent=rows[i].p.name+(rows[i].p.active===false?' (baja)':''));
   }
   renderLine(byWeek(list));
@@ -394,7 +415,7 @@ function renderLine(weeks){
   const el=$('line');
   if(weeks.length<2){el.innerHTML='<div class="empty">La gráfica semanal aparece a partir de 2 semanas con datos.</div>';return}
   const W=340,H=170,pl=32,pr=10,pt=12,pb=28;
-  const pts=weeks.map(g=>{let p=0,n=0,f=0;g.list.forEach(s=>{Object.values(s.marks).forEach(v=>{n++;if(v==='P')p++});f+=Object.keys(s.fis||{}).length});return{a:n?p/n*100:0,f:n?Math.min(100,f/n*100):0}});
+  const pts=weeks.map(g=>{let p=0,n=0,f=0;let fn=0;g.list.forEach(s=>{Object.values(s.marks).forEach(v=>{n++;if(v==='P')p++});if(fisApplies(s)){fn+=Object.values(s.marks).filter(v=>v==='P').length;f+=Object.keys(s.fis||{}).length}});return{a:n?p/n*100:0,f:fn?Math.min(100,f/fn*100):0}});
   const x=i=>pl+(W-pl-pr)*(i/(weeks.length-1)),y=v=>pt+(H-pt-pb)*(1-v/100);
   let g='';[0,50,100].forEach(v=>{g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}%</text>`});
   const line=k=>pts.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v[k]).toFixed(1)).join(' ');
@@ -419,26 +440,20 @@ $('expRaw').onclick=()=>{
   const list=filtered(),names=Object.fromEntries(players.map(p=>[p.id,p.name]));
   const rows=[['Semana (desde jueves)','Semana','Fecha','Tipo','Persona','Estado','Físico']];
   list.forEach(s=>{const ids=new Set([...Object.keys(s.marks),...Object.keys(s.fis||{})]);const ws=weekStart(s.date);
-    ids.forEach(pid=>rows.push([ws,weekLabel(ws),s.date,TYPES[s.type],names[pid]||pid,s.marks[pid]?LABEL[s.marks[pid]]:'',s.fis&&s.fis[pid]?'Sí':'No']))});
+    ids.forEach(pid=>rows.push([ws,weekLabel(ws),s.date,TYPES[s.type],names[pid]||pid,s.marks[pid]?LABEL[s.marks[pid]]:'',!fisApplies(s)?'':(s.fis&&s.fis[pid]?'Sí':'No')]))});
   if(rows.length===1)return toast('No hay datos que exportar');
   download('asistencia-registro-'+todayISO()+'.csv',csv(rows));
 };
 $('expSum').onclick=()=>{
   const list=filtered();if(!list.length)return toast('No hay datos que exportar');
-  const rows=[['Persona','Presente','Justificada','Falta','Físico','Sesiones','% asistencia']];
-  perPlayer(list).forEach(r=>{if(r.n||r.p.active!==false)rows.push([r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.n,r.pct==null?'':r.pct])});
+  const rows=[['Persona','Presente','Justificada','Falta','Físico','Físicos posibles','Sesiones','% asistencia']];
+  perPlayer(list).forEach(r=>{if(r.n||r.p.active!==false)rows.push([r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.fisN,r.n,r.pct==null?'':r.pct])});
   download('asistencia-resumen-'+todayISO()+'.csv',csv(rows));
-};
-$('expPub').onclick=async()=>{
-  if(dirty&&!confirm('Tienes cambios sin guardar. La versión pública los incluirá igualmente. ¿Continuar?'))return;
-  const html=buildDoc(true);
-  if(downloads){try{await downloads.save({filename:'asistencia-publica.html',data:html});toast('asistencia-publica.html listo');return}catch(e){if(e&&e.code==='declined')return}}
-  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download='asistencia-publica.html';document.body.appendChild(a);a.click();a.remove()}catch(e){toast('No se pudo descargar')}
 };
 $('expWeek').onclick=()=>{
   const list=filtered();if(!list.length)return toast('No hay datos que exportar');
-  const rows=[['Semana (desde jueves)','Semana','Persona','Presente','Justificada','Falta','Físico','Sesiones','% asistencia']];
-  byWeek(list).forEach(g=>perPlayer(g.list).forEach(r=>{if(r.n||r.fis)rows.push([g.w,weekLabel(g.w),r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.n,r.pct==null?'':r.pct])}));
+  const rows=[['Semana (desde jueves)','Semana','Persona','Presente','Justificada','Falta','Físico','Físicos posibles','Sesiones','% asistencia']];
+  byWeek(list).forEach(g=>perPlayer(g.list).forEach(r=>{if(r.n||r.fis)rows.push([g.w,weekLabel(g.w),r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.fisN,r.n,r.pct==null?'':r.pct])}));
   download('asistencia-semanal-'+todayISO()+'.csv',csv(rows));
 };
 

@@ -1,0 +1,94 @@
+{
+ "rev": 6,
+ "updated": "2026-09-30T13:37:19.773Z",
+ "players": [
+  {
+   "id": "p1",
+   "name": "Loann",
+   "active": true
+  },
+  {
+   "id": "p2",
+   "name": "Aniol",
+   "active": true
+  },
+  {
+   "id": "p3",
+   "name": "Miquel",
+   "active": true
+  },
+  {
+   "id": "p4",
+   "name": "Pol",
+   "active": true
+  },
+  {
+   "id": "p5",
+   "name": "Arnau",
+   "active": true
+  },
+  {
+   "id": "p6",
+   "name": "Leo",
+   "active": true
+  },
+  {
+   "id": "p7",
+   "name": "Jan",
+   "active": true
+  },
+  {
+   "id": "p8",
+   "name": "Martí",
+   "active": true
+  },
+  {
+   "id": "p9",
+   "name": "Alex",
+   "active": true
+  },
+  {
+   "id": "p10",
+   "name": "Jofre",
+   "active": true
+  }
+ ],
+ "sessions": {
+  "2026-09-28_E": {
+   "id": "2026-09-28_E",
+   "date": "2026-09-28",
+   "type": "E",
+   "marks": {
+    "p6": "P",
+    "p3": "P",
+    "p4": "P",
+    "p5": "P",
+    "p7": "P",
+    "p8": "P",
+    "p9": "P",
+    "p10": "P",
+    "p2": "P",
+    "p1": "F"
+   },
+   "fis": {
+    "p6": true
+   }
+  },
+  "2026-09-24_E": {
+   "id": "2026-09-24_E",
+   "date": "2026-09-24",
+   "type": "E",
+   "marks": {
+    "p1": "P",
+    "p2": "P",
+    "p3": "P",
+    "p4": "P",
+    "p5": "P",
+    "p6": "P",
+    "p9": "P",
+    "p10": "P"
+   },
+   "fis": {}
+  }
+ }
+}
