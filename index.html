@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Asistencia">
+<title>Asistencia del equipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="css">
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#16213A; --muted:#5F6B82; --line:#DCE1EA;
+  --accent:#1D5FD1; --ok:#23945A; --no:#CC3F35; --just:#D99A12; --empty:#C4CBD8;
+  --ok-soft:#E3F4EA; --no-soft:#FBE6E4; --just-soft:#FBF1D9;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1522; --surface:#18202F; --ink:#E8ECF4; --muted:#98A3B8; --line:#2A3446;
+    --accent:#6C9BFF; --ok:#3FBF7A; --no:#F0675C; --just:#F0B93A; --empty:#3A4559;
+    --ok-soft:#173424; --no-soft:#3A1D1B; --just-soft:#3A2F14;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1522; --surface:#18202F; --ink:#E8ECF4; --muted:#98A3B8; --line:#2A3446;
+  --accent:#6C9BFF; --ok:#3FBF7A; --no:#F0675C; --just:#F0B93A; --empty:#3A4559;
+  --ok-soft:#173424; --no-soft:#3A1D1B; --just-soft:#3A2F14;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Barlow",-apple-system,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.45;
+  -webkit-tap-highlight-color:transparent}
+.wrap{max-width:560px;margin:0 auto;padding:12px 16px 104px}
+h1,h2,.big{font-family:"Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.01em}
+h2{font-size:1.35rem;margin:28px 0 10px;font-weight:700}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+
+/* Tab bar */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);
+  display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .in{display:flex;max-width:560px;width:100%}
+nav.tabs button{flex:1;background:none;border:0;padding:12px 4px 14px;font-weight:600;color:var(--muted);font-size:.95rem}
+nav.tabs button[aria-selected="true"]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+
+/* Session header */
+.day{display:flex;align-items:center;gap:8px;margin-top:6px}
+.day .big{flex:1;font-size:2.1rem;font-weight:700;line-height:1.05;text-transform:capitalize;margin:0}
+.iconbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1.2rem}
+.dateinput{width:100%;margin-top:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;margin-top:10px}
+.seg button{flex:1;border:0;background:none;padding:9px 4px;border-radius:9px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+.tally{display:flex;align-items:baseline;gap:10px;margin:20px 0 8px}
+.tally .num{font-family:"Barlow Condensed",sans-serif;font-size:3.4rem;font-weight:700;line-height:1}
+.tally .num small{font-size:1.6rem;color:var(--muted)}
+.meter{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--empty);margin-bottom:14px}
+.meter span{display:block;height:100%}
+
+/* Player rows */
+ul.roster{list-style:none;margin:0;padding:0;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+ul.roster li+li{border-top:1px solid var(--line)}
+.row{width:100%;display:flex;align-items:center;gap:12px;padding:14px 14px;background:none;border:0;text-align:left;min-height:60px}
+.row .n{flex:1;font-weight:600;font-size:1.05rem}
+.pill{min-width:112px;text-align:center;padding:6px 10px;border-radius:999px;font-weight:600;font-size:.9rem;border:1.5px dashed var(--empty);color:var(--muted)}
+.pill.P{background:var(--ok-soft);color:var(--ok);border:1.5px solid var(--ok)}
+.pill.F{background:var(--no-soft);color:var(--no);border:1.5px solid var(--no)}
+.pill.J{background:var(--just-soft);color:var(--just);border:1.5px solid var(--just)}
+.pill.pop{animation:pop .18s ease-out}
+@keyframes pop{from{transform:scale(.9)}to{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.pill.pop{animation:none}}
+.hint{font-size:.88rem;margin:10px 2px 0}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{flex:1;min-width:140px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--no)}
+
+/* Stats */
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.filters label{font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+select{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:2rem;line-height:1.1}
+.kpi span{font-size:.82rem;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.bar{margin:0 0 12px}
+.bar:last-child{margin-bottom:0}
+.bar .top{display:flex;justify-content:space-between;font-size:.95rem;margin-bottom:4px}
+.bar .top b{font-variant-numeric:tabular-nums}
+.bar .track{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--empty)}
+.bar .sub{font-size:.8rem;color:var(--muted);margin-top:3px}
+.legend{display:flex;gap:14px;font-size:.82rem;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.chart svg{width:100%;height:auto;display:block}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.hist li:first-child{border-top:0}
+.hist .d{flex:1}
+.hist .d small{display:block;color:var(--muted)}
+.hist button{border:1px solid var(--line);background:none;border-radius:8px;padding:6px 10px;font-size:.88rem}
+.empty{padding:22px 14px;text-align:center;color:var(--muted)}
+
+/* Team */
+.team li{display:flex;gap:8px;align-items:center;padding:8px 10px}
+.team input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.team .x{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:none;color:var(--no);font-size:1.1rem}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:999px;font-size:.9rem;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.sync{font-size:.8rem;color:var(--muted);text-align:right;margin:0}
+.wkl{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+.link{border:0;background:none;color:var(--accent);font-weight:600;padding:0 0 0 6px}
+.chg{margin-top:6px}.chg summary{color:var(--accent);font-size:.9rem;cursor:pointer;list-style:none}
+.chg summary::-webkit-details-marker{display:none}
+li.prow{display:flex;align-items:center;padding-right:10px}
+li.prow .row{flex:1;min-width:0}
+.fis{flex:none;border:1.5px solid var(--line);background:none;border-radius:10px;padding:8px 10px;font-weight:600;font-size:.85rem;color:var(--muted)}
+.fis[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill{min-width:96px}
+.hist li.wk{border-top:0;padding:14px 0 4px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:1.1rem}
+.hist li.wk:first-child{padding-top:0}
+.savebar{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom,0px));z-index:11;display:flex;justify-content:center;padding:0 12px 10px}
+.savebar .in{max-width:536px;width:100%;display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--surface);border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.savebar .in span{flex:1;font-size:.92rem}
+.savebar button{border:0;border-radius:10px;padding:10px 16px;font-weight:600;background:var(--accent);color:#fff}
+.savebar button.ghost{background:transparent;color:var(--surface);opacity:.8}
+.owner-only{}
+body.ro .owner-only{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"><div class="wrap">
+  <p class="sync" id="sync">Cargando…</p>
+
+  <!-- PASAR LISTA -->
+  <section id="v-lista">
+    <div class="day">
+      <button class="iconbtn" id="prev" aria-label="Día anterior">‹</button>
+      <h1 class="big" id="dayLabel"></h1>
+      <button class="iconbtn" id="next" aria-label="Día siguiente">›</button>
+    </div>
+    <p class="wkl"><span id="weekLabel"></span> <button class="link hidden" id="toToday">Volver a hoy</button></p>
+    <details class="chg"><summary>Cambiar fecha</summary><input type="date" class="dateinput" id="dateIn" aria-label="Fecha de la sesión"></details>
+    <div class="seg" id="typeSeg" role="group" aria-label="Tipo de sesión"></div>
+
+    <div class="tally"><div class="num" id="tNum">0<small>/10</small></div><div class="muted" id="tTxt">presentes</div></div>
+    <div class="meter" id="meter"></div>
+
+    <ul class="roster" id="roster"></ul>
+    <p class="hint muted">Toca un nombre para cambiar: presente → falta → justificada → sin marcar. Toca «Físico» si también hace físico ese día.</p>
+    <div class="actions">
+      <button class="btn primary" id="allP">Marcar todos presentes</button>
+      <button class="btn" id="clear">Borrar esta sesión</button>
+    </div>
+  </section>
+
+  <!-- ESTADÍSTICAS -->
+  <section id="v-stats" class="hidden">
+    <h1 class="big" style="font-size:2.1rem;margin:6px 0 0">Estadísticas</h1>
+    <div class="filters">
+      <label>Tipo<select id="fType"><option value="all">Todas</option><option value="E">Entrenos</option><option value="P">Partidos</option><option value="O">Otros</option></select></label>
+      <label>Periodo<select id="fPer"><option value="all">Todo</option><option value="w0">Esta semana</option><option value="w1">Semana anterior</option><option value="w4">Últimas 4 semanas</option><option value="m0">Este mes</option><option value="m1">Mes anterior</option></select></label>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><b id="kS">0</b><span>sesiones</span></div>
+      <div class="kpi"><b id="kA">–</b><span>asistencia media</span></div>
+      <div class="kpi"><b id="kF">0</b><span>físicos totales</span></div>
+    </div>
+
+    <h2>Por persona</h2>
+    <div class="panel" id="bars"></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>Presente</span><span><i style="background:var(--just)"></i>Justificada</span><span><i style="background:var(--no)"></i>Falta</span></div>
+
+    <h2>Evolución semanal</h2>
+    <div class="panel chart" id="line"></div>
+
+    <h2>Exportar datos</h2>
+    <div class="actions" style="margin-top:0">
+      <button class="btn primary" id="expRaw">Registro completo (CSV)</button>
+      <button class="btn" id="expSum">Resumen por persona (CSV)</button>
+      <button class="btn" id="expWeek">Resumen semanal (CSV)</button>
+      <button class="btn owner-only" id="expPub">Descargar versión pública (GitHub)</button>
+    </div>
+    <p class="hint muted">Los CSV se abren en Excel, Numbers o Google Sheets. Respetan los filtros de arriba.</p>
+
+    <h2>Historial por semanas</h2>
+    <div class="panel"><ul class="hist" id="hist"></ul></div>
+  </section>
+
+  <!-- EQUIPO -->
+  <section id="v-team" class="hidden">
+    <h1 class="big" style="font-size:2.1rem;margin:6px 0 12px">Equipo</h1>
+    <ul class="roster team" id="team"></ul>
+    <div class="actions"><button class="btn" id="addP">Añadir persona</button></div>
+    <p class="hint muted">Los cambios de nombre se guardan solos. Si quitas a alguien, su historial se conserva en los CSV.</p>
+  </section>
+</div>
+
+<nav class="tabs"><div class="in" role="tablist">
+  <button role="tab" class="owner-only" aria-selected="true" data-v="lista">Pasar lista</button>
+  <button role="tab" aria-selected="false" data-v="stats">Estadísticas</button>
+  <button role="tab" class="owner-only" aria-selected="false" data-v="team">Equipo</button>
+</div></nav>
+<div class="savebar hidden" id="savebar"><div class="in"><span id="saveTxt">Cambios sin guardar</span><button class="ghost" id="discard">Descartar</button><button id="save">Guardar</button></div></div>
+<div class="toast" id="toast" role="status"></div></div>
+<script type="application/json" id="data">{"rev":6,"updated":"2026-09-30T13:37:19.773Z","players":[{"id":"p1","name":"Loann","active":true},{"id":"p2","name":"Aniol","active":true},{"id":"p3","name":"Miquel","active":true},{"id":"p4","name":"Pol","active":true},{"id":"p5","name":"Arnau","active":true},{"id":"p6","name":"Leo","active":true},{"id":"p7","name":"Jan","active":true},{"id":"p8","name":"Martí","active":true},{"id":"p9","name":"Alex","active":true},{"id":"p10","name":"Jofre","active":true}],"sessions":{"2026-09-28_E":{"id":"2026-09-28_E","date":"2026-09-28","type":"E","marks":{"p6":"P","p3":"P","p4":"P","p5":"P","p7":"P","p8":"P","p9":"P","p10":"P","p2":"P","p1":"F"},"fis":{"p6":true}},"2026-09-24_E":{"id":"2026-09-24_E","date":"2026-09-24","type":"E","marks":{"p1":"P","p2":"P","p3":"P","p4":"P","p5":"P","p6":"P","p9":"P","p10":"P"},"fis":{}}}}</script>
+<script>
+(function(){
+const TYPES={E:'Entreno',P:'Partido',O:'Otro'};
+const LABEL={P:'Presente',F:'Falta',J:'Justificada'};
+const CYCLE=[undefined,'P','F','J'];
+const LS='asistencia-equipo.v1';
+const $=id=>document.getElementById(id);
+
+let players=Array.from({length:9},(_,i)=>({id:'p'+(i+1),name:'Jugador '+(i+1),active:true}));
+let sessions={};              // id -> {id,date,type,marks:{pid:'P'|'F'|'J'}}
+let cur={date:todayISO(),type:'E'};
+function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function shiftDay(iso,n){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmtLong(iso){return new Date(iso+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'short'})}
+function fmtShort(iso){return new Date(iso+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'})}
+function sid(){return cur.date+'_'+cur.type}
+function active(){return players.filter(p=>p.active!==false)}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
+let artifactNs=null, downloads=null, canEdit=false, dirty=false;
+const SHELL=document.getElementById('app').outerHTML;
+const CSS=document.getElementById('css').textContent;
+const SRC=document.currentScript.textContent;
+const DATA=(()=>{try{return JSON.parse($('data').textContent)}catch(e){return{rev:0,sessions:{}}}})();
+if(DATA.players&&DATA.players.length)players=DATA.players;
+sessions=DATA.sessions||{};
+
+/* ---------- guardado ---------- */
+function snapshot(){const s={};Object.values(sessions).forEach(x=>{if(Object.keys(x.marks||{}).length||Object.keys(x.fis||{}).length)s[x.id]=x});return s}
+function markDirty(){
+  dirty=true;$('savebar').classList.remove('hidden');
+  try{localStorage.setItem(LS,JSON.stringify({base:DATA.rev,players,sessions}))}catch(e){}
+}
+function saveSession(){markDirty()}
+function saveTeam(){markDirty()}
+function loadDraft(){
+  try{const d=JSON.parse(localStorage.getItem(LS));if(d&&d.base===DATA.rev){players=d.players;sessions=d.sessions||{};markDirty()}}catch(e){}
+}
+function buildDoc(ro){
+  const data={rev:(DATA.rev||0)+(ro?0:1),updated:new Date().toISOString(),players,sessions:snapshot()};if(ro)data.readonly=true;
+  const json=JSON.stringify(data).replace(/</g,'\\u003c');
+  const S='scr'+'ipt';
+  return '<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n'+
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'+
+    '<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Asistencia">\n'+
+    '<title>Asistencia del equipo</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n'+
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'+
+    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">\n'+
+    '<style id="css">'+CSS+'</style>\n</head>\n<body>\n'+SHELL+'\n'+
+    '<'+S+' type="application/json" id="data">'+json+'</'+S+'>\n<'+S+'>'+SRC+'</'+S+'>\n</body>\n</html>\n';
+}
+function setReadOnly(){
+  canEdit=false;dirty=false;document.body.classList.add('ro');$('savebar').classList.add('hidden');
+  $('sync').textContent='Solo lectura'+(DATA.updated?' · actualizado '+new Date(DATA.updated).toLocaleDateString('es-ES',{day:'numeric',month:'short'}):'');
+  if(view!=='stats')show('stats');
+}
+function setEditor(local){
+  canEdit=true;document.body.classList.remove('ro');loadDraft();
+  $('sync').textContent=local?'Vista previa: los cambios solo se guardan en este dispositivo':'Modo edición · pulsa Guardar para publicar';
+  show('lista');
+}
+$('save').onclick=async()=>{
+  if(!artifactNs){try{localStorage.setItem(LS,JSON.stringify({base:DATA.rev,players,sessions}))}catch(e){};toast('Guardado en este dispositivo');return}
+  $('save').disabled=true;$('saveTxt').textContent='Guardando…';
+  try{await artifactNs.publish(buildDoc());$('saveTxt').textContent='Guardado'}
+  catch(e){
+    $('save').disabled=false;$('saveTxt').textContent='Cambios sin guardar';
+    const c=e&&e.code;
+    if(c==='not_writer'||c==='not_granted'){toast('Esta vista es de solo lectura');setReadOnly()}
+    else if(c==='conflict')toast('Había una versión más nueva; recargando');
+    else toast('No se pudo guardar, inténtalo de nuevo');
+  }
+};
+$('discard').onclick=()=>{
+  if(!confirm('¿Descartar los cambios sin guardar?'))return;
+  try{localStorage.removeItem(LS)}catch(e){}
+  players=DATA.players&&DATA.players.length?DATA.players:players;sessions=JSON.parse(JSON.stringify(DATA.sessions||{}));
+  dirty=false;$('savebar').classList.add('hidden');renderAll();
+};
+window.addEventListener('beforeunload',e=>{if(dirty&&canEdit){e.preventDefault();e.returnValue=''}});
+
+async function connect(){
+  if(DATA.readonly){setReadOnly();return}
+  if(!window.claude||!window.claude.use){setEditor(true);return}
+  const [a,d,u]=await Promise.all(['artifact','downloads','user'].map(n=>window.claude.use(n).catch(()=>null)));
+  artifactNs=a;downloads=d;
+  let ok=false;
+  if(u){try{ok=!!(await u.canEdit())}catch(e){}}
+  if(ok&&artifactNs)setEditor(false);else setReadOnly();
+}
+
+/* ---------- Semanas ---------- */
+function weekStart(iso){const d=new Date(iso+'T12:00:00');const wd=(d.getDay()+3)%7;d.setDate(d.getDate()-wd);return shiftDay(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),0)}
+function weekLabel(ws){const we=shiftDay(ws,6),a=new Date(ws+'T12:00:00'),b=new Date(we+'T12:00:00');
+  const m=x=>x.toLocaleDateString('es-ES',{month:'short'}).replace('.','');
+  return a.getMonth()===b.getMonth()?a.getDate()+'–'+b.getDate()+' '+m(b):a.getDate()+' '+m(a)+' – '+b.getDate()+' '+m(b)}
+function hasData(s){return Object.keys(s.marks||{}).length||Object.keys(s.fis||{}).length}
+
+/* ---------- Pasar lista ---------- */
+function getSession(create){
+  const id=sid();
+  if(!sessions[id]&&create)sessions[id]={id,date:cur.date,type:cur.type,marks:{},fis:{}};
+  if(sessions[id]&&!sessions[id].fis)sessions[id].fis={};
+  return sessions[id];
+}
+function renderLista(){
+  const isToday=cur.date===todayISO();
+  $('dayLabel').textContent=(isToday?'Hoy, ':'')+fmtLong(cur.date);
+  $('weekLabel').textContent='Semana del '+weekLabel(weekStart(cur.date));
+  $('toToday').classList.toggle('hidden',isToday);
+  $('dateIn').value=cur.date;
+  $('typeSeg').innerHTML=Object.entries(TYPES).map(([k,v])=>`<button aria-pressed="${k===cur.type}" data-t="${k}">${v}</button>`).join('');
+  const s=getSession(false),m=s?s.marks:{},f=(s&&s.fis)||{},list=active();
+  const c={P:0,F:0,J:0};let nf=0;list.forEach(p=>{if(m[p.id])c[m[p.id]]++;if(f[p.id])nf++});
+  $('tNum').innerHTML=c.P+'<small>/'+list.length+'</small>';
+  $('tTxt').textContent='presentes'+(nf?' · '+nf+' al físico':'')+(c.F?' · '+c.F+' falta'+(c.F>1?'s':''):'')+(c.J?' · '+c.J+' justif.':'');
+  const w=n=>(list.length?n/list.length*100:0)+'%';
+  $('meter').innerHTML=`<span style="width:${w(c.P)};background:var(--ok)"></span><span style="width:${w(c.J)};background:var(--just)"></span><span style="width:${w(c.F)};background:var(--no)"></span>`;
+  $('roster').innerHTML=list.map(p=>{const st=m[p.id];return `<li class="prow"><button class="row" data-p="${p.id}"><span class="n"></span><span class="pill ${st||''}">${st?LABEL[st]:'Sin marcar'}</span></button><button class="fis" data-f="${p.id}" aria-pressed="${!!f[p.id]}" aria-label="Físico">Físico</button></li>`}).join('');
+  $('roster').querySelectorAll('.row').forEach((b,i)=>b.querySelector('.n').textContent=list[i].name);
+}
+$('roster').addEventListener('click',e=>{
+  const fb=e.target.closest('.fis');
+  if(fb){const s=getSession(true),pid=fb.dataset.f;
+    if(s.fis[pid])delete s.fis[pid];else{s.fis[pid]=true;if(!s.marks[pid])s.marks[pid]='P'}
+    saveSession(s);renderLista();if(navigator.vibrate)navigator.vibrate(8);return}
+  const b=e.target.closest('.row');if(!b)return;
+  const s=getSession(true),pid=b.dataset.p;
+  const nxt=CYCLE[(CYCLE.indexOf(s.marks[pid])+1)%CYCLE.length];
+  if(nxt)s.marks[pid]=nxt;else delete s.marks[pid];
+  saveSession(s);renderLista();
+  const pill=$('roster').querySelector(`[data-p="${pid}"] .pill`);if(pill)pill.classList.add('pop');
+  if(navigator.vibrate)navigator.vibrate(8);
+});
+$('typeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b){cur.type=b.dataset.t;renderLista()}});
+$('prev').onclick=()=>{cur.date=shiftDay(cur.date,-1);renderLista()};
+$('next').onclick=()=>{cur.date=shiftDay(cur.date,1);renderLista()};
+$('toToday').onclick=()=>{cur.date=todayISO();renderLista()};
+$('dateIn').onchange=e=>{if(e.target.value){cur.date=e.target.value;renderLista()}};
+$('allP').onclick=()=>{const s=getSession(true);active().forEach(p=>s.marks[p.id]='P');saveSession(s);renderLista();toast('Todos presentes')};
+$('clear').onclick=()=>{const s=getSession(false);if(!s||!hasData(s))return;if(!confirm('¿Borrar la asistencia de esta sesión?'))return;delete sessions[s.id];saveSession(s);renderLista();toast('Sesión borrada: pulsa Guardar')};
+
+/* ---------- Estadísticas ---------- */
+function filtered(){
+  const t=$('fType').value,per=$('fPer').value,today=todayISO();
+  let from='0000',to='9999';
+  if(per==='w0'){from=weekStart(today);to=shiftDay(from,6)}
+  else if(per==='w1'){from=shiftDay(weekStart(today),-7);to=shiftDay(from,6)}
+  else if(per==='w4'){from=shiftDay(weekStart(today),-21);to=shiftDay(weekStart(today),6)}
+  else if(per==='m0'){from=today.slice(0,7)+'-01';to=today.slice(0,7)+'-31'}
+  else if(per==='m1'){const d=new Date(today+'T12:00:00');d.setDate(1);d.setMonth(d.getMonth()-1);const m=d.toISOString().slice(0,7);from=m+'-01';to=m+'-31'}
+  return Object.values(sessions).filter(s=>hasData(s)&&(t==='all'||s.type===t)&&s.date>=from&&s.date<=to).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.type<b.type?-1:1);
+}
+function perPlayer(list){
+  return players.map(p=>{const c={P:0,F:0,J:0};let fis=0;list.forEach(s=>{const v=s.marks[p.id];if(v)c[v]++;if(s.fis&&s.fis[p.id])fis++});const n=c.P+c.F+c.J;return{p,c,n,fis,pct:n?Math.round(c.P/n*100):null}});
+}
+function byWeek(list){const g={};list.forEach(s=>{const w=weekStart(s.date);(g[w]=g[w]||[]).push(s)});return Object.keys(g).sort().map(w=>({w,list:g[w]}))}
+function renderStats(){
+  const list=filtered(),rows=perPlayer(list).filter(r=>r.p.active!==false||r.n);
+  $('kS').textContent=list.length;
+  let tp=0,tn=0,tfis=0;rows.forEach(r=>{tp+=r.c.P;tn+=r.n;tfis+=r.fis});
+  $('kA').textContent=tn?Math.round(tp/tn*100)+'%':'–';$('kF').textContent=tfis;
+  if(!list.length){$('bars').innerHTML='<div class="empty">Aún no hay sesiones en este filtro.</div>'}
+  else{
+    rows.sort((a,b)=>(b.pct??-1)-(a.pct??-1));
+    $('bars').innerHTML=rows.map(r=>{const w=k=>(r.n?r.c[k]/r.n*100:0)+'%';return `<div class="bar"><div class="top"><span class="nm"></span><b>${r.pct==null?'–':r.pct+'%'}</b></div>
+      <div class="track"><span style="width:${w('P')};background:var(--ok)"></span><span style="width:${w('J')};background:var(--just)"></span><span style="width:${w('F')};background:var(--no)"></span></div>
+      <div class="sub">${r.c.P} presente · ${r.c.J} justif. · ${r.c.F} falta · <strong>${r.fis} físico</strong></div></div>`}).join('');
+    $('bars').querySelectorAll('.nm').forEach((e,i)=>e.textContent=rows[i].p.name+(rows[i].p.active===false?' (baja)':''));
+  }
+  renderLine(byWeek(list));
+  const weeks=byWeek(list).reverse();
+  $('hist').innerHTML=weeks.length?weeks.map(g=>{
+    const items=g.list.slice().reverse().map(s=>{const v=Object.values(s.marks),p=v.filter(x=>x==='P').length,nf=Object.keys(s.fis||{}).length;
+      return `<li><div class="d">${fmtLong(s.date)} · ${TYPES[s.type]}<small>${p} de ${v.length} presentes${nf?' · '+nf+' al físico':''}</small></div><button class="owner-only" data-open="${s.id}">Abrir</button></li>`}).join('');
+    return `<li class="wk">Semana del ${weekLabel(g.w)}</li>${items}`}).join(''):'<li class="empty">Sin sesiones.</li>';
+}
+function renderLine(weeks){
+  const el=$('line');
+  if(weeks.length<2){el.innerHTML='<div class="empty">La gráfica semanal aparece a partir de 2 semanas con datos.</div>';return}
+  const W=340,H=170,pl=32,pr=10,pt=12,pb=28;
+  const pts=weeks.map(g=>{let p=0,n=0,f=0;g.list.forEach(s=>{Object.values(s.marks).forEach(v=>{n++;if(v==='P')p++});f+=Object.keys(s.fis||{}).length});return{a:n?p/n*100:0,f:n?Math.min(100,f/n*100):0}});
+  const x=i=>pl+(W-pl-pr)*(i/(weeks.length-1)),y=v=>pt+(H-pt-pb)*(1-v/100);
+  let g='';[0,50,100].forEach(v=>{g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}%</text>`});
+  const line=k=>pts.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v[k]).toFixed(1)).join(' ');
+  const area=line('a')+` L${x(pts.length-1).toFixed(1)} ${y(0)} L${x(0).toFixed(1)} ${y(0)} Z`;
+  const step=Math.ceil(weeks.length/5);
+  let lab='';weeks.forEach((w,i)=>{if(i%step===0||i===weeks.length-1)lab+=`<text x="${x(i)}" y="${H-9}" text-anchor="middle" font-size="10" fill="var(--muted)">${fmtShort(w.w)}</text>`});
+  const dots=k=>pts.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v[k])}" r="3.5" fill="${k==='a'?'var(--accent)':'var(--just)'}"><title>Semana del ${weekLabel(weeks[i].w)}: ${Math.round(v[k])}%</title></circle>`).join('');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Asistencia y físico por semana">${g}<path d="${area}" fill="var(--accent)" opacity=".12"/><path d="${line('a')}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/><path d="${line('f')}" fill="none" stroke="var(--just)" stroke-width="2" stroke-dasharray="5 4"/>${dots('a')}${dots('f')}${lab}</svg>
+  <div class="legend"><span><i style="background:var(--accent)"></i>% asistencia</span><span><i style="background:var(--just)"></i>% físico</span><span>Eje: inicio de semana (jueves)</span></div>`;
+}
+$('hist').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(!b)return;const s=sessions[b.dataset.open];cur={date:s.date,type:s.type};show('lista')});
+$('fType').onchange=renderStats;$('fPer').onchange=renderStats;
+
+/* ---------- CSV ---------- */
+const q=v=>{v=String(v);return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function csv(rows){return '\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n')}
+async function download(name,text){
+  if(downloads){try{await downloads.save({filename:name,data:text});toast('Archivo listo');return}catch(e){if(e&&e.code==='declined')return}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();a.remove()}catch(e){toast('No se pudo descargar')}
+}
+$('expRaw').onclick=()=>{
+  const list=filtered(),names=Object.fromEntries(players.map(p=>[p.id,p.name]));
+  const rows=[['Semana (desde jueves)','Semana','Fecha','Tipo','Persona','Estado','Físico']];
+  list.forEach(s=>{const ids=new Set([...Object.keys(s.marks),...Object.keys(s.fis||{})]);const ws=weekStart(s.date);
+    ids.forEach(pid=>rows.push([ws,weekLabel(ws),s.date,TYPES[s.type],names[pid]||pid,s.marks[pid]?LABEL[s.marks[pid]]:'',s.fis&&s.fis[pid]?'Sí':'No']))});
+  if(rows.length===1)return toast('No hay datos que exportar');
+  download('asistencia-registro-'+todayISO()+'.csv',csv(rows));
+};
+$('expSum').onclick=()=>{
+  const list=filtered();if(!list.length)return toast('No hay datos que exportar');
+  const rows=[['Persona','Presente','Justificada','Falta','Físico','Sesiones','% asistencia']];
+  perPlayer(list).forEach(r=>{if(r.n||r.p.active!==false)rows.push([r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.n,r.pct==null?'':r.pct])});
+  download('asistencia-resumen-'+todayISO()+'.csv',csv(rows));
+};
+$('expPub').onclick=async()=>{
+  if(dirty&&!confirm('Tienes cambios sin guardar. La versión pública los incluirá igualmente. ¿Continuar?'))return;
+  const html=buildDoc(true);
+  if(downloads){try{await downloads.save({filename:'asistencia-publica.html',data:html});toast('asistencia-publica.html listo');return}catch(e){if(e&&e.code==='declined')return}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download='asistencia-publica.html';document.body.appendChild(a);a.click();a.remove()}catch(e){toast('No se pudo descargar')}
+};
+$('expWeek').onclick=()=>{
+  const list=filtered();if(!list.length)return toast('No hay datos que exportar');
+  const rows=[['Semana (desde jueves)','Semana','Persona','Presente','Justificada','Falta','Físico','Sesiones','% asistencia']];
+  byWeek(list).forEach(g=>perPlayer(g.list).forEach(r=>{if(r.n||r.fis)rows.push([g.w,weekLabel(g.w),r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.n,r.pct==null?'':r.pct])}));
+  download('asistencia-semanal-'+todayISO()+'.csv',csv(rows));
+};
+
+/* ---------- Equipo ---------- */
+function renderTeam(){
+  const list=active();
+  $('team').innerHTML=list.map(p=>`<li><input data-p="${p.id}" aria-label="Nombre" maxlength="40"><button class="x" data-del="${p.id}" aria-label="Quitar">✕</button></li>`).join('');
+  $('team').querySelectorAll('input').forEach((inp,i)=>inp.value=list[i].name);
+}
+$('team').addEventListener('input',e=>{const i=e.target.closest('input');if(!i)return;const p=players.find(x=>x.id===i.dataset.p);p.name=i.value.trim()||'Sin nombre';saveTeam()});
+$('team').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;const p=players.find(x=>x.id===b.dataset.del);if(!confirm('¿Quitar a '+p.name+' del equipo?'))return;p.active=false;saveTeam();renderTeam()});
+$('addP').onclick=()=>{const id='p'+Date.now().toString(36);players.push({id,name:'Nueva persona',active:true});saveTeam();renderTeam();const inp=$('team').querySelector(`[data-p="${id}"]`);if(inp){inp.focus();inp.select()}};
+
+/* ---------- Navegación ---------- */
+let view='stats';
+function show(v){
+  view=v;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
+  ['lista','stats','team'].forEach(k=>$('v-'+k).classList.toggle('hidden',k!==v));
+  renderAll();window.scrollTo(0,0);
+}
+function renderAll(){
+  if(view==='lista')renderLista();
+  else if(view==='stats')renderStats();
+  else if(view==='team'&&!$('team').contains(document.activeElement))renderTeam();
+}
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.v)});
+
+document.body.classList.add('ro');show('stats');connect();
+})();
+</script>
+</body>
+</html>
