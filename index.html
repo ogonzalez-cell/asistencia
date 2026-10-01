@@ -136,6 +136,22 @@ li.prow .row{flex:1;min-width:0}
 .savebar button.ghost{background:transparent;color:var(--surface);opacity:.8}
 .owner-only{}
 body.ro .owner-only{display:none!important}
+.prehead{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.prehead .pt{flex:1;text-align:center;line-height:1.25}.prehead .pt b{font-family:"Barlow Condensed",sans-serif;font-size:1.15rem}
+.prehead .pt small{display:block;color:var(--muted);font-size:.82rem}
+.preok{font-size:.92rem;margin:0 0 10px}
+.prelist{list-style:none;margin:0 0 12px;padding:0}
+.prelist li{padding:8px 10px;border-radius:10px;background:var(--no-soft);margin-bottom:6px;font-size:.92rem}
+.prelist li b{color:var(--ink)}
+table.pre{width:100%;border-collapse:collapse;font-size:.95rem}
+table.pre th{font-weight:600;font-size:.8rem;color:var(--muted);text-align:center;padding:4px 2px;text-transform:capitalize}
+table.pre th small{display:block;font-weight:400;text-transform:none}
+table.pre th:first-child,table.pre td:first-child{text-align:left}
+table.pre td{padding:8px 2px;border-top:1px solid var(--line);text-align:center}
+tr.inc td:first-child{font-weight:700}
+.mk{display:inline-block;min-width:30px;padding:2px 6px;border-radius:8px;font-weight:700;font-size:.85rem}
+.mk.P{background:var(--ok-soft);color:var(--ok)}.mk.F{background:var(--no-soft);color:var(--no)}.mk.J{background:var(--just-soft);color:var(--just)}.mk.N{color:var(--muted)}
+.tot{font-weight:700;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -167,6 +183,12 @@ body.ro .owner-only{display:none!important}
   <!-- ESTADÍSTICAS -->
   <section id="v-stats" class="hidden">
     <h1 class="big" style="font-size:2.1rem;margin:6px 0 0">Estadísticas</h1>
+    <h2>Previa convocatoria</h2>
+    <div class="panel">
+      <div class="prehead"><button class="iconbtn" id="preP" aria-label="Semana anterior">‹</button><div class="pt"><b id="preWk"></b><small id="preSub"></small></div><button class="iconbtn" id="preN" aria-label="Semana siguiente">›</button></div>
+      <div id="preBody"></div>
+    </div>
+    <div class="legend"><span>Entrenos jue · lun · mié previos a la convocatoria. ✓ presente · J justificada · ✗ falta · – sin marcar</span></div>
     <div class="filters">
       <label>Tipo<select id="fType"><option value="all">Todas</option><option value="E">Entrenos</option><option value="P">Partidos</option><option value="O">Otros</option></select></label>
       <label>Periodo<select id="fPer"><option value="all">Todo</option><option value="w0">Esta semana</option><option value="w1">Semana anterior</option><option value="w4">Últimas 4 semanas</option><option value="m0">Este mes</option><option value="m1">Mes anterior</option></select></label>
@@ -391,7 +413,42 @@ function perPlayer(list){
   return players.map(p=>{const c={P:0,F:0,J:0};let fis=0,fisN=0;list.forEach(s=>{const v=s.marks[p.id];if(v)c[v]++;if(fisApplies(s)){if(v==='P')fisN++;if(s.fis&&s.fis[p.id])fis++}});const n=c.P+c.F+c.J;return{p,c,n,fis,fisN,pct:n?Math.round(c.P/n*100):null}});
 }
 function byWeek(list){const g={};list.forEach(s=>{const w=weekStart(s.date);(g[w]=g[w]||[]).push(s)});return Object.keys(g).sort().map(w=>({w,list:g[w]}))}
+/* ---------- Previa convocatoria ---------- */
+let preWs=null;
+function defPreWs(){const t=todayISO(),ws=weekStart(t);return new Date(t+'T12:00:00').getDay()===4?shiftDay(ws,-7):ws}
+function fmtDow(iso){return new Date(iso+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric'})}
+function renderPre(){
+  if(!preWs)preWs=defPreWs();
+  const today=todayISO(),days=[preWs,shiftDay(preWs,4),shiftDay(preWs,6)],conv=shiftDay(preWs,7);
+  $('preWk').textContent='Semana del '+weekLabel(preWs);
+  $('preSub').textContent='Convocatoria: '+fmtLong(conv)+(preWs===defPreWs()?' · la próxima':'');
+  $('preN').disabled=preWs>=weekStart(today);$('preN').style.opacity=$('preN').disabled?.35:1;
+  const ses=days.map(d=>{const x=sessions[d+'_E'];return x&&hasData(x)?x:null});
+  const done=ses.filter(Boolean).length;
+  const SYM={P:'✓',F:'✗',J:'J'};
+  const rows=players.filter(p=>p.active!==false).map(p=>{
+    const cells=ses.map(x=>x?(x.marks[p.id]||'N'):null);
+    const pres=cells.filter(c=>c==='P').length;
+    const miss=days.map((d,i)=>cells[i]&&cells[i]!=='P'?{d,c:cells[i]}:null).filter(Boolean);
+    return{p,cells,pres,miss}});
+  rows.sort((a,b)=>b.miss.length-a.miss.length||a.p.name.localeCompare(b.p.name,'es'));
+  const inc=rows.filter(r=>r.miss.length);
+  let h='';
+  if(!done){h='<div class="empty">Aún no hay entrenos registrados esta semana.</div>'}
+  else{
+    h+=inc.length?`<p class="preok"><b>${inc.length}</b> sin todos los entrenos registrados (${done} de 3):</p><ul class="prelist">`+inc.map(r=>`<li><b></b> — ${r.miss.map(m=>fmtDow(m.d)+(m.c==='J'?' (justif.)':m.c==='N'?' (sin marcar)':'')).join(', ')}</li>`).join('')+'</ul>'
+      :`<p class="preok">✅ Todos han hecho los ${done} entrenos registrados${done<3?' (de 3)':''}.</p>`;
+    h+='<table class="pre"><thead><tr><th></th>'+days.map((d,i)=>`<th>${fmtDow(d)}<small>${ses[i]?'':(d>today?'pendiente':'sin datos')}</small></th>`).join('')+'<th>Total</th></tr></thead><tbody>'+
+      rows.map(r=>`<tr class="${r.miss.length?'inc':''}"><td class="nm"></td>${r.cells.map(c=>c?`<td><span class="mk ${c}">${SYM[c]||'–'}</span></td>`:'<td class="muted">·</td>').join('')}<td class="tot">${r.pres}/${done}</td></tr>`).join('')+'</tbody></table>';
+  }
+  $('preBody').innerHTML=h;
+  $('preBody').querySelectorAll('.prelist li b').forEach((e,i)=>e.textContent=inc[i].p.name);
+  $('preBody').querySelectorAll('td.nm').forEach((e,i)=>e.textContent=rows[i].p.name);
+}
+$('preP').onclick=()=>{preWs=shiftDay(preWs,-7);renderPre()};
+$('preN').onclick=()=>{if(preWs<weekStart(todayISO())){preWs=shiftDay(preWs,7);renderPre()}};
 function renderStats(){
+  renderPre();
   const list=filtered(),rows=perPlayer(list).filter(r=>r.p.active!==false||r.n);
   $('kS').textContent=list.length;
   let tp=0,tn=0,tfis=0;rows.forEach(r=>{tp+=r.c.P;tn+=r.n;tfis+=r.fis});
