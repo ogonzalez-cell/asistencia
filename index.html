@@ -188,7 +188,7 @@ tr.inc td:first-child{font-weight:700}
       <div class="prehead"><button class="iconbtn" id="preP" aria-label="Semana anterior">‹</button><div class="pt"><b id="preWk"></b><small id="preSub"></small></div><button class="iconbtn" id="preN" aria-label="Semana siguiente">›</button></div>
       <div id="preBody"></div>
     </div>
-    <div class="legend"><span>Entrenos jue · lun · mié previos a la convocatoria. ✓ presente · J justificada · ✗ falta · – sin marcar</span></div>
+    <div class="legend"><span>Entrenos vie · lun · mié previos a la convocatoria. ✓ presente · J justificada · ✗ falta · – sin marcar</span></div>
     <div class="filters">
       <label>Tipo<select id="fType"><option value="all">Todas</option><option value="E">Entrenos</option><option value="P">Partidos</option><option value="O">Otros</option></select></label>
       <label>Periodo<select id="fPer"><option value="all">Todo</option><option value="w0">Esta semana</option><option value="w1">Semana anterior</option><option value="w4">Últimas 4 semanas</option><option value="m0">Este mes</option><option value="m1">Mes anterior</option></select></label>
@@ -419,7 +419,7 @@ function defPreWs(){const t=todayISO(),ws=weekStart(t);return new Date(t+'T12:00
 function fmtDow(iso){return new Date(iso+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric'})}
 function renderPre(){
   if(!preWs)preWs=defPreWs();
-  const today=todayISO(),days=[preWs,shiftDay(preWs,4),shiftDay(preWs,6)],conv=shiftDay(preWs,7);
+  const today=todayISO(),d0=(sessions[preWs+'_E']&&hasData(sessions[preWs+'_E']))?preWs:shiftDay(preWs,1),days=[d0,shiftDay(preWs,4),shiftDay(preWs,6)],conv=shiftDay(preWs,7);
   $('preWk').textContent='Semana del '+weekLabel(preWs);
   $('preSub').textContent='Convocatoria: '+fmtLong(conv)+(preWs===defPreWs()?' · la próxima':'');
   $('preN').disabled=preWs>=weekStart(today);$('preN').style.opacity=$('preN').disabled?.35:1;
