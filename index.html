@@ -582,6 +582,7 @@ function mList(){return (MATCHES.matches||[]).slice().sort((a,b)=>(a.date+a.time
 function defMatch(){const l=mList(),t=todayISO();const n=l.find(m=>m.date>=t);return n?n.id:(l.length?l[l.length-1].id:null)}
 function mTitle(m){return 'J'+m.jornada+' · '+titleCase(m.rival)}
 function titleCase(x){return (x||'').toLowerCase().replace(/(^|[\s\-'(])([\p{L}])/gu,(a,b,c)=>b+c.toUpperCase()).replace(/\b(Hc|Chp|Cp|Ch|Ce|Uehc?)\b/g,w=>w.toUpperCase())}
+function resTxt(m){const g=m.res.split('-').map(Number),o=m.home?g[0]:g[1],r=m.home?g[1]:g[0];return (o>r?'Victoria ':o<r?'Derrota ':'Empate ')+o+'-'+r}
 function fmtM(m){return new Date(m.date+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})+' · '+m.time}
 function preDays(m){const ws=shiftDay(weekStart(m.date),-7);return[ws,shiftDay(ws,1),shiftDay(ws,4),shiftDay(ws,6)]}
 function trainMarks(m,pid){const d=preDays(m);const t0=(sessions[d[0]+'_E']&&hasData(sessions[d[0]+'_E']))?d[0]:d[1];
@@ -598,7 +599,7 @@ function renderConv(){
   $('mSub').innerHTML='';const sub=$('mSub');
   sub.append(fmtM(m)+' · ');const b=document.createElement('span');b.className='badge '+(m.home?'home':'away');b.textContent=m.home?'Casa':'Fuera';sub.append(b);
   if(!m.home&&m.poblacio)sub.append(' '+m.poblacio);
-  const [hh,mm]=m.time.split(':').map(Number),cm=hh*60+mm-75;sub.append(document.createElement('br'),'Convocatoria '+String(Math.floor(cm/60)).padStart(2,'0')+':'+String(cm%60).padStart(2,'0')+(m.nota?' · '+m.nota:''));
+  const [hh,mm]=m.time.split(':').map(Number),cm=hh*60+mm-75;if(m.res)sub.append(' · '+resTxt(m));sub.append(document.createElement('br'),'Convocatoria '+String(Math.floor(cm/60)).padStart(2,'0')+':'+String(cm%60).padStart(2,'0')+(m.nota?' · '+m.nota:''));
   const sel=new Set(conv[m.id]||[]),list=canEdit?active():players.filter(p=>sel.has(p.id)||p.active!==false);
   $('cNum').innerHTML=sel.size+'<small>/'+active().length+'</small>';
   $('cTxt').textContent=sel.size?'convocados':'convocatoria sin hacer';
@@ -624,7 +625,7 @@ function renderConvStats(){
   $('cst').innerHTML='<thead><tr><th>Jugador</th><th>Conv.</th><th>%</th><th>Asist.</th><th>Último</th></tr></thead><tbody>'+rows.map(r=>'<tr><td></td><td>'+r.n+'/'+done.length+'</td><td>'+(r.pct==null?'–':r.pct+'%')+'</td><td>'+(r.asis==null?'–':r.asis+'%')+'</td><td>'+(r.last?'J'+r.last.jornada:'–')+'</td></tr>').join('')+'</tbody>';
   $('cst').querySelectorAll('tbody td:first-child').forEach((e,i)=>e.textContent=rows[i].p.name);
   const t=todayISO();
-  $('mlist').innerHTML=l.map(m=>{const n=(conv[m.id]||[]).length;return '<li class="'+(m.id===curM?'sel':'')+'" data-m="'+m.id+'"><div class="d"><b></b><small>'+fmtM(m)+' · '+(m.home?'Casa':'Fuera')+(m.date<t?' · jugado':'')+'</small></div><span class="c">'+(n?n+' conv.':'—')+'</span></li>'}).join('');
+  $('mlist').innerHTML=l.map(m=>{const n=(conv[m.id]||[]).length;return '<li class="'+(m.id===curM?'sel':'')+'" data-m="'+m.id+'"><div class="d"><b></b><small>'+fmtM(m)+' · '+(m.home?'Casa':'Fuera')+(m.res?' · '+resTxt(m):(m.date<t?' · jugado':''))+'</small></div><span class="c">'+(n?n+' conv.':'—')+'</span></li>'}).join('');
   $('mlist').querySelectorAll('li').forEach((e,i)=>e.querySelector('b').textContent=mTitle(l[i]));
   $('mSrc').textContent=MATCHES.updated?'Calendario: '+(MATCHES.source||'FCP')+' · actualizado '+new Date(MATCHES.updated).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
 }
