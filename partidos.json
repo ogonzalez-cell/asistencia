@@ -1,11 +1,11 @@
 {
- "updated": "2026-10-15T05:52:58Z",
+ "updated": "2026-10-15T07:47:50Z",
  "source": "agenda FCP",
- "team": "Júnior A · JÚNIOR OR 1",
+ "team": "Júnior A",
+ "temporada": "41",
  "matches": [
   {
-   "id": "JUN1-J1",
-   "jornada": 1,
+   "grupo": "4900",
    "date": "2026-09-26",
    "time": "16:30",
    "home": true,
@@ -14,11 +14,13 @@
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
    "comp": "JÚNIOR OR 1",
-   "res": "1-2"
+   "key": "4900-281-322",
+   "res": "1-2",
+   "jornada": 1,
+   "id": "JUN1-J1"
   },
   {
-   "id": "JUN1-J3",
-   "jornada": 3,
+   "grupo": "4900",
    "date": "2026-10-10",
    "time": "15:30",
    "home": true,
@@ -27,11 +29,13 @@
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
    "comp": "JÚNIOR OR 1",
-   "res": "3-3"
+   "key": "4900-281-319",
+   "res": "3-3",
+   "jornada": 3,
+   "id": "JUN1-J3"
   },
   {
-   "id": "JUN1-J2",
-   "jornada": 2,
+   "grupo": "4900",
    "date": "2026-10-12",
    "time": "11:30",
    "home": false,
@@ -40,12 +44,14 @@
    "pista": "PAVELLÓ FRANCESC CASSART",
    "poblacio": "Sant Feliu de Codines",
    "comp": "JÚNIOR OR 1",
+   "key": "4900-283-281",
    "res": "1-1",
+   "jornada": 2,
+   "id": "JUN1-J2",
    "nota": "Aplazado por lluvia (era el dom 04/10)"
   },
   {
-   "id": "JUN1-J4",
-   "jornada": 4,
+   "grupo": "4900",
    "date": "2026-10-18",
    "time": "12:00",
    "home": false,
@@ -53,11 +59,13 @@
    "rivalId": "315",
    "pista": "MUNICIPAL D ESPORTS I LLEURE D OLOT",
    "poblacio": "Olot",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-315-281",
+   "jornada": 4,
+   "id": "JUN1-J4"
   },
   {
-   "id": "JUN1-J6",
-   "jornada": 6,
+   "grupo": "4900",
    "date": "2026-10-31",
    "time": "15:30",
    "home": true,
@@ -65,11 +73,13 @@
    "rivalId": "304",
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-281-304",
+   "jornada": 6,
+   "id": "JUN1-J6"
   },
   {
-   "id": "JUN1-J7",
-   "jornada": 7,
+   "grupo": "4900",
    "date": "2026-11-07",
    "time": "13:45",
    "home": false,
@@ -78,11 +88,13 @@
    "pista": "COMPLEX ESPORTIU DE LES COMES",
    "poblacio": "Igualada",
    "comp": "JÚNIOR OR 1",
+   "key": "4900-252-281",
+   "jornada": 7,
+   "id": "JUN1-J7",
    "nota": "Cambio FCP: antes 08/11 19:00"
   },
   {
-   "id": "JUN1-J8",
-   "jornada": 8,
+   "grupo": "4900",
    "date": "2026-11-14",
    "time": "18:00",
    "home": false,
@@ -90,11 +102,13 @@
    "rivalId": "322",
    "pista": "POLIESPORTIU MUNICIPAL DE CALAFELL",
    "poblacio": "Calafell",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-322-281",
+   "jornada": 8,
+   "id": "JUN1-J8"
   },
   {
-   "id": "JUN1-J9",
-   "jornada": 9,
+   "grupo": "4900",
    "date": "2026-11-22",
    "time": "18:45",
    "home": true,
@@ -102,11 +116,13 @@
    "rivalId": "283",
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-281-283",
+   "jornada": 9,
+   "id": "JUN1-J9"
   },
   {
-   "id": "JUN1-J10",
-   "jornada": 10,
+   "grupo": "4900",
    "date": "2026-11-29",
    "time": "12:30",
    "home": false,
@@ -114,11 +130,13 @@
    "rivalId": "319",
    "pista": "POLIESPORTIU RIPOLL",
    "poblacio": "Ripoll",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-319-281",
+   "jornada": 10,
+   "id": "JUN1-J10"
   },
   {
-   "id": "JUN1-J11",
-   "jornada": 11,
+   "grupo": "4900",
    "date": "2026-12-06",
    "time": "18:45",
    "home": true,
@@ -126,11 +144,13 @@
    "rivalId": "315",
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-281-315",
+   "jornada": 11,
+   "id": "JUN1-J11"
   },
   {
-   "id": "JUN1-J13",
-   "jornada": 13,
+   "grupo": "4900",
    "date": "2026-12-19",
    "time": "12:30",
    "home": false,
@@ -138,11 +158,13 @@
    "rivalId": "304",
    "pista": "MASIES DE VOLTREGA",
    "poblacio": "Les Masies de Voltregà",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-304-281",
+   "jornada": 13,
+   "id": "JUN1-J13"
   },
   {
-   "id": "JUN1-J14",
-   "jornada": 14,
+   "grupo": "4900",
    "date": "2027-01-10",
    "time": "18:45",
    "home": true,
@@ -150,7 +172,10 @@
    "rivalId": "252",
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-281-252",
+   "jornada": 14,
+   "id": "JUN1-J14"
   }
  ]
 }
