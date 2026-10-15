@@ -1,7 +1,7 @@
 name: Sincronizar partidos FCP
 on:
   schedule:
-    - cron: "0 6,12,18 * * *"   # 3 veces al día (UTC)
+    - cron: "15 7 * * *"   # 1 vez al día: 8:15 en invierno, 9:15 en verano (hora de Mataró)
   workflow_dispatch:
 permissions:
   contents: write
