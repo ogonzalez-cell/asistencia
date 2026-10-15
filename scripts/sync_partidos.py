@@ -18,7 +18,7 @@ PRIMERA = {"322": (1, True), "283": (2, False), "319": (3, True), "315": (4, Fal
            "304": (6, True), "252": (7, False)}
 VUELTA = 7
 POBLACIO = {"322": "Calafell", "283": "Sant Feliu de Codines", "319": "Ripoll", "315": "Olot",
-            "304": "Sant Hipòlit de Voltregà", "252": "Igualada", CLUB: "Sant Celoni"}
+            "304": "Les Masies de Voltregà", "252": "Igualada", CLUB: "Sant Celoni"}
 
 
 def fetch():
