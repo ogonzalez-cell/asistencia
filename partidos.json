@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-14T12:00:00Z",
- "source": "agenda FCP (copia 05/10) + cambios confirmados por el club",
+ "updated": "2026-10-15T05:30:14Z",
+ "source": "agenda FCP",
  "team": "Júnior A · JÚNIOR OR 1",
  "matches": [
   {
@@ -10,9 +10,11 @@
    "time": "16:30",
    "home": true,
    "rival": "CLUB PATI CALAFELL",
+   "rivalId": "322",
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "res": "1-2"
   },
   {
    "id": "JUN1-J3",
@@ -21,9 +23,11 @@
    "time": "15:30",
    "home": true,
    "rival": "HOQUEI CLUB RIPOLL",
+   "rivalId": "319",
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
-   "comp": "JÚNIOR OR 1"
+   "comp": "JÚNIOR OR 1",
+   "res": "3-3"
   },
   {
    "id": "JUN1-J2",
@@ -32,9 +36,11 @@
    "time": "11:30",
    "home": false,
    "rival": "CHP SANT FELIU",
-   "pista": "",
+   "rivalId": "283",
+   "pista": "PAVELLÓ FRANCESC CASSART",
    "poblacio": "Sant Feliu de Codines",
    "comp": "JÚNIOR OR 1",
+   "res": "1-1",
    "nota": "Aplazado por lluvia (era el dom 04/10)"
   },
   {
@@ -44,6 +50,7 @@
    "time": "12:00",
    "home": false,
    "rival": "CH OLOT",
+   "rivalId": "315",
    "pista": "MUNICIPAL D ESPORTS I LLEURE D OLOT",
    "poblacio": "Olot",
    "comp": "JÚNIOR OR 1"
@@ -55,6 +62,7 @@
    "time": "15:30",
    "home": true,
    "rival": "CLUB PATÍ VOLTREGÀ",
+   "rivalId": "304",
    "pista": "MUNICIPAL D ESPORTS SANT CELONI",
    "poblacio": "Sant Celoni",
    "comp": "JÚNIOR OR 1"
@@ -62,12 +70,86 @@
   {
    "id": "JUN1-J7",
    "jornada": 7,
-   "date": "2026-11-08",
-   "time": "19:00",
+   "date": "2026-11-07",
+   "time": "13:45",
    "home": false,
    "rival": "IGUALADA HC C",
+   "rivalId": "252",
    "pista": "COMPLEX ESPORTIU DE LES COMES",
    "poblacio": "Igualada",
+   "comp": "JÚNIOR OR 1",
+   "nota": "Cambio FCP: antes 08/11 19:00"
+  },
+  {
+   "id": "JUN1-J8",
+   "jornada": 8,
+   "date": "2026-11-14",
+   "time": "18:00",
+   "home": false,
+   "rival": "CLUB PATI CALAFELL",
+   "rivalId": "322",
+   "pista": "POLIESPORTIU MUNICIPAL DE CALAFELL",
+   "poblacio": "Calafell",
+   "comp": "JÚNIOR OR 1"
+  },
+  {
+   "id": "JUN1-J9",
+   "jornada": 9,
+   "date": "2026-11-22",
+   "time": "18:45",
+   "home": true,
+   "rival": "CHP SANT FELIU",
+   "rivalId": "283",
+   "pista": "MUNICIPAL D ESPORTS SANT CELONI",
+   "poblacio": "Sant Celoni",
+   "comp": "JÚNIOR OR 1"
+  },
+  {
+   "id": "JUN1-J10",
+   "jornada": 10,
+   "date": "2026-11-29",
+   "time": "12:30",
+   "home": false,
+   "rival": "HOQUEI CLUB RIPOLL",
+   "rivalId": "319",
+   "pista": "POLIESPORTIU RIPOLL",
+   "poblacio": "Ripoll",
+   "comp": "JÚNIOR OR 1"
+  },
+  {
+   "id": "JUN1-J11",
+   "jornada": 11,
+   "date": "2026-12-06",
+   "time": "18:45",
+   "home": true,
+   "rival": "CH OLOT",
+   "rivalId": "315",
+   "pista": "MUNICIPAL D ESPORTS SANT CELONI",
+   "poblacio": "Sant Celoni",
+   "comp": "JÚNIOR OR 1"
+  },
+  {
+   "id": "JUN1-J13",
+   "jornada": 13,
+   "date": "2026-12-19",
+   "time": "12:30",
+   "home": false,
+   "rival": "CLUB PATÍ VOLTREGÀ",
+   "rivalId": "304",
+   "pista": "MASIES DE VOLTREGA",
+   "poblacio": "Sant Hipòlit de Voltregà",
+   "comp": "JÚNIOR OR 1"
+  },
+  {
+   "id": "JUN1-J14",
+   "jornada": 14,
+   "date": "2027-01-10",
+   "time": "18:45",
+   "home": true,
+   "rival": "IGUALADA HC C",
+   "rivalId": "252",
+   "pista": "MUNICIPAL D ESPORTS SANT CELONI",
+   "poblacio": "Sant Celoni",
    "comp": "JÚNIOR OR 1"
   }
  ]
