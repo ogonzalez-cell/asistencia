@@ -23,8 +23,13 @@ POBLACIO = {"322": "Calafell", "283": "Sant Feliu de Codines", "319": "Ripoll", 
 
 def fetch():
     body = urllib.parse.urlencode({"cliente": "fecapa", "idm": "1", "modal_temp": "", "id_temp": ID_TEMP}).encode()
-    req = urllib.request.Request(URL, data=body, headers={"User-Agent": "Mozilla/5.0 (asistencia-sync)",
-                                                          "Content-Type": "application/x-www-form-urlencoded"})
+    req = urllib.request.Request(URL, data=body, headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Origin": "https://www.hoqueipatins.fecapa.cat",
+        "Referer": "https://www.hoqueipatins.fecapa.cat/ag/",
+        "X-Requested-With": "XMLHttpRequest",
+        "Accept": "text/html, */*; q=0.01"})
     with urllib.request.urlopen(req, timeout=120) as r:
         return r.read().decode("utf-8", "replace")
 
@@ -80,8 +85,11 @@ def main():
     except Exception:
         old = {"matches": []}
     prev = {m["id"]: m for m in old.get("matches", [])}
-    new = parse(fetch())
+    page = fetch()
+    new = parse(page)
     if len(new) < 3:
+        print(f"Respuesta: {len(page)} bytes, {page.count('fila_agenda')} filas")
+        print(re.sub(r"\s+", " ", page[:400]))
         sys.exit(f"Solo {len(new)} partidos encontrados: no toco partidos.json")
     for m in new:
         p = prev.get(m["id"])
