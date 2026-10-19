@@ -12,8 +12,8 @@
 <style id="css">
 :root{
   --bg:#F3F5F8; --surface:#FFFFFF; --ink:#16213A; --muted:#5F6B82; --line:#DCE1EA;
-  --accent:#1D5FD1; --ok:#23945A; --no:#CC3F35; --just:#D99A12; --empty:#C4CBD8;
-  --ok-soft:#E3F4EA; --no-soft:#FBE6E4; --just-soft:#FBF1D9;
+  --accent:#1D5FD1; --ok:#23945A; --no:#CC3F35; --just:#D99A12; --exc:#7B5BD6; --empty:#C4CBD8;
+  --ok-soft:#E3F4EA; --no-soft:#FBE6E4; --just-soft:#FBF1D9; --exc-soft:#EEE8FB;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -21,14 +21,14 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0F1522; --surface:#18202F; --ink:#E8ECF4; --muted:#98A3B8; --line:#2A3446;
-    --accent:#6C9BFF; --ok:#3FBF7A; --no:#F0675C; --just:#F0B93A; --empty:#3A4559;
-    --ok-soft:#173424; --no-soft:#3A1D1B; --just-soft:#3A2F14;
+    --accent:#6C9BFF; --ok:#3FBF7A; --no:#F0675C; --just:#F0B93A; --exc:#A58BFF; --empty:#3A4559;
+    --ok-soft:#173424; --no-soft:#3A1D1B; --just-soft:#3A2F14; --exc-soft:#2A2145;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0F1522; --surface:#18202F; --ink:#E8ECF4; --muted:#98A3B8; --line:#2A3446;
-  --accent:#6C9BFF; --ok:#3FBF7A; --no:#F0675C; --just:#F0B93A; --empty:#3A4559;
-  --ok-soft:#173424; --no-soft:#3A1D1B; --just-soft:#3A2F14;
+  --accent:#6C9BFF; --ok:#3FBF7A; --no:#F0675C; --just:#F0B93A; --exc:#A58BFF; --empty:#3A4559;
+  --ok-soft:#173424; --no-soft:#3A1D1B; --just-soft:#3A2F14; --exc-soft:#2A2145;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -74,6 +74,7 @@ ul.roster li+li{border-top:1px solid var(--line)}
 .pill.P{background:var(--ok-soft);color:var(--ok);border:1.5px solid var(--ok)}
 .pill.F{background:var(--no-soft);color:var(--no);border:1.5px solid var(--no)}
 .pill.J{background:var(--just-soft);color:var(--just);border:1.5px solid var(--just)}
+.pill.I{background:var(--exc-soft);color:var(--exc);border:1.5px solid var(--exc)}
 .pill.pop{animation:pop .18s ease-out}
 @keyframes pop{from{transform:scale(.9)}to{transform:scale(1)}}
 @media (prefers-reduced-motion: reduce){.pill.pop{animation:none}}
@@ -150,7 +151,7 @@ table.pre th:first-child,table.pre td:first-child{text-align:left}
 table.pre td{padding:8px 2px;border-top:1px solid var(--line);text-align:center}
 tr.inc td:first-child{font-weight:700}
 .mk{display:inline-block;min-width:30px;padding:2px 6px;border-radius:8px;font-weight:700;font-size:.85rem}
-.mk.P{background:var(--ok-soft);color:var(--ok)}.mk.F{background:var(--no-soft);color:var(--no)}.mk.J{background:var(--just-soft);color:var(--just)}.mk.N{color:var(--muted)}
+.mk.P{background:var(--ok-soft);color:var(--ok)}.mk.F{background:var(--no-soft);color:var(--no)}.mk.J{background:var(--just-soft);color:var(--just)}.mk.I{background:var(--exc-soft);color:var(--exc)}.mk.N{color:var(--muted)}
 .tot{font-weight:700;font-variant-numeric:tabular-nums}
 /* convocatoria */
 .mhead{display:flex;align-items:center;gap:8px;margin-top:6px}
@@ -163,7 +164,7 @@ tr.inc td:first-child{font-weight:700}
 .pill.N{border-style:solid;color:var(--muted)}
 .tr{display:flex;gap:3px;flex:none;margin-right:8px}
 .tr i{width:9px;height:9px;border-radius:3px;background:var(--empty)}
-.tr i.P{background:var(--ok)}.tr i.J{background:var(--just)}.tr i.F{background:var(--no)}
+.tr i.P{background:var(--ok)}.tr i.J{background:var(--just)}.tr i.I{background:var(--exc)}.tr i.F{background:var(--no)}
 ul.mlist{list-style:none;margin:0;padding:0}
 ul.mlist li{display:flex;align-items:center;gap:10px;padding:10px 2px;border-top:1px solid var(--line)}
 ul.mlist li:first-child{border-top:0}
@@ -175,9 +176,30 @@ table.cst th{font-size:.78rem;color:var(--muted);font-weight:600;text-align:righ
 table.cst th:first-child,table.cst td:first-child{text-align:left}
 table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
 .ro .owner-act{display:none}
+/* motivos de falta justificada */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+.sheet h3{margin:0 0 2px;font-size:1.05rem}.sheet p{margin:0 0 12px;color:var(--muted);font-size:.88rem}
+.sheet .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet .opts button{padding:12px 8px;border-radius:12px;border:1.5px solid var(--exc);background:var(--exc-soft);color:var(--exc);font:inherit;font-weight:700}
+.sheet .opts button.ev{border-color:var(--just);background:var(--just-soft);color:var(--just)}
+.sheet .opts button[aria-pressed="true"]{outline:3px solid currentColor;outline-offset:1px}
+.sheet .opts small{display:block;font-weight:500;font-size:.75rem;opacity:.85}
+.sheet .row2{display:flex;gap:8px;margin-top:10px}.sheet .row2 button{flex:1}
+.wtag{flex:none;margin-right:8px;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;background:var(--exc-soft);color:var(--exc)}
 </style>
 </head>
 <body>
+<div class="sheet hidden" id="whySheet" role="dialog" aria-label="Motivo de la falta justificada">
+  <h3 id="whyName"></h3>
+  <p>Motivo de la falta justificada</p>
+  <div class="opts">
+    <button data-w="L">Lesión<small>inevitable</small></button>
+    <button data-w="E">Estudios<small>justificados</small></button>
+    <button data-w="M">Enfermedad<small>con parte</small></button>
+    <button data-w="O" class="ev">Otro motivo<small>avisó, evitable</small></button>
+  </div>
+  <div class="row2"><button class="btn" id="whyNone">Quitar marca</button><button class="btn" id="whyClose">Listo</button></div>
+</div>
 <div id="app"><div class="wrap">
   <p class="sync" id="sync">Cargando…</p>
 
@@ -196,7 +218,7 @@ table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;f
     <div class="meter" id="meter"></div>
 
     <ul class="roster" id="roster"></ul>
-    <p class="hint muted">Toca un nombre para cambiar: presente → falta → justificada → sin marcar. «Físico» aparece en los entrenos de lunes y miércoles.</p>
+    <p class="hint muted">Toca un nombre para cambiar: presente → falta → justificada (eliges el motivo: lesión, estudios, enfermedad u otro). Toca una justificada para cambiar el motivo o quitarla. «Físico» aparece en los entrenos de lunes y miércoles.</p>
     <div class="actions">
       <button class="btn primary" id="allP">Marcar todos presentes</button>
       <button class="btn" id="clear">Borrar esta sesión</button>
@@ -211,7 +233,7 @@ table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;f
       <div class="prehead"><button class="iconbtn" id="preP" aria-label="Semana anterior">‹</button><div class="pt"><b id="preWk"></b><small id="preSub"></small></div><button class="iconbtn" id="preN" aria-label="Semana siguiente">›</button></div>
       <div id="preBody"></div>
     </div>
-    <div class="legend"><span>Entrenos vie · lun · mié previos a la convocatoria. ✓ presente · J justificada · ✗ falta · – sin marcar</span></div>
+    <div class="legend"><span>Entrenos vie · lun · mié previos a la convocatoria. ✓ presente · L lesión · E estudios · Ef enfermedad · J justificada (otro) · ✗ falta · – sin marcar</span></div>
     <div class="filters">
       <label>Tipo<select id="fType"><option value="all">Todas</option><option value="E">Entrenos</option><option value="P">Partidos</option><option value="O">Otros</option></select></label>
       <label>Periodo<select id="fPer"><option value="all">Todo</option><option value="w0">Esta semana</option><option value="w1">Semana anterior</option><option value="w4">Últimas 4 semanas</option><option value="m0">Este mes</option><option value="m1">Mes anterior</option></select></label>
@@ -224,7 +246,7 @@ table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;f
 
     <h2>Por persona</h2>
     <div class="panel" id="bars"></div>
-    <div class="legend"><span><i style="background:var(--ok)"></i>Presente</span><span><i style="background:var(--just)"></i>Justificada</span><span><i style="background:var(--no)"></i>Falta</span></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>Presente</span><span><i style="background:var(--exc)"></i>Inevitable (lesión, estudios, enfermedad)</span><span><i style="background:var(--just)"></i>Justificada (otro)</span><span><i style="background:var(--no)"></i>Falta</span></div>
 
     <h2>Evolución semanal</h2>
     <div class="panel chart" id="line"></div>
@@ -266,7 +288,7 @@ table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;f
       <div class="kpi"><b id="ckN">0</b><span>partidos en calendario</span></div>
     </div>
     <div class="panel" style="margin-top:12px"><table class="cst" id="cst"></table></div>
-    <p class="hint muted">% convocado sobre los partidos con convocatoria hecha. Asistencia: entrenos registrados de toda la temporada.</p>
+    <p class="hint muted">% convocado sobre los partidos con convocatoria hecha. Asistencia: entrenos de toda la temporada, sin contar faltas por lesión, estudios o enfermedad.</p>
     <div class="actions" style="margin-top:8px"><button class="btn" id="expConv">Convocatorias (CSV)</button></div>
     <h2>Calendario Júnior A</h2>
     <div class="panel"><ul class="mlist" id="mlist"></ul></div>
@@ -295,7 +317,12 @@ table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;f
 <script>
 (function(){
 const TYPES={E:'Entreno',P:'Partido',O:'Otro'};
-const LABEL={P:'Presente',F:'Falta',J:'Justificada'};
+const LABEL={P:'Presente',F:'Falta',J:'Justificada',I:'Justificada'};
+const WHY={L:'Lesión',E:'Estudios',M:'Enfermedad',O:'Otro motivo'};const INEV=new Set(['L','E','M']);
+const ABBR={L:'L',E:'E',M:'Ef'};
+function whyOf(s,pid){return s&&s.why?s.why[pid]:undefined}
+function stOf(s,pid){const v=s&&s.marks[pid];return v==='J'&&INEV.has(whyOf(s,pid))?'I':v}
+function stLabel(s,pid){const v=stOf(s,pid),w=whyOf(s,pid);if(!v)return 'Sin marcar';if(v==='I')return WHY[w];if(v==='J')return w==='O'?'Justif. (otro)':'Justificada';return LABEL[v]}
 const CYCLE=[undefined,'P','F','J'];
 const LS='asistencia-equipo.v1';
 const $=id=>document.getElementById(id);
@@ -431,12 +458,12 @@ function renderLista(){
   $('dateIn').value=cur.date;
   $('typeSeg').innerHTML=Object.entries(TYPES).map(([k,v])=>`<button aria-pressed="${k===cur.type}" data-t="${k}">${v}</button>`).join('');
   const s=getSession(false),m=s?s.marks:{},f=(s&&s.fis)||{},list=active();const fisOn=fisApplies({date:cur.date,type:cur.type});
-  const c={P:0,F:0,J:0};let nf=0;list.forEach(p=>{if(m[p.id])c[m[p.id]]++;if(f[p.id])nf++});
+  const c={P:0,F:0,J:0,I:0};let nf=0;list.forEach(p=>{const st=stOf(s,p.id);if(st)c[st]++;if(f[p.id])nf++});
   $('tNum').innerHTML=c.P+'<small>/'+list.length+'</small>';
-  $('tTxt').textContent='presentes'+(nf?' · '+nf+' al físico':'')+(c.F?' · '+c.F+' falta'+(c.F>1?'s':''):'')+(c.J?' · '+c.J+' justif.':'');
+  $('tTxt').textContent='presentes'+(nf?' · '+nf+' al físico':'')+(c.F?' · '+c.F+' falta'+(c.F>1?'s':''):'')+(c.I?' · '+c.I+' inevitable'+(c.I>1?'s':''):'')+(c.J?' · '+c.J+' justif.':'');
   const w=n=>(list.length?n/list.length*100:0)+'%';
-  $('meter').innerHTML=`<span style="width:${w(c.P)};background:var(--ok)"></span><span style="width:${w(c.J)};background:var(--just)"></span><span style="width:${w(c.F)};background:var(--no)"></span>`;
-  $('roster').innerHTML=list.map(p=>{const st=m[p.id];return `<li class="prow"><button class="row" data-p="${p.id}"><span class="n"></span><span class="pill ${st||''}">${st?LABEL[st]:'Sin marcar'}</span></button>${fisOn?`<button class="fis" data-f="${p.id}" aria-pressed="${!!f[p.id]}" aria-label="Físico">Físico</button>`:''}</li>`}).join('');
+  $('meter').innerHTML=`<span style="width:${w(c.P)};background:var(--ok)"></span><span style="width:${w(c.I)};background:var(--exc)"></span><span style="width:${w(c.J)};background:var(--just)"></span><span style="width:${w(c.F)};background:var(--no)"></span>`;
+  $('roster').innerHTML=list.map(p=>{const st=stOf(s,p.id);return `<li class="prow"><button class="row" data-p="${p.id}"><span class="n"></span><span class="pill ${st||''}">${stLabel(s,p.id)}</span></button>${fisOn?`<button class="fis" data-f="${p.id}" aria-pressed="${!!f[p.id]}" aria-label="Físico">Físico</button>`:''}</li>`}).join('');
   $('roster').querySelectorAll('.row').forEach((b,i)=>b.querySelector('.n').textContent=list[i].name);
 }
 $('roster').addEventListener('click',e=>{
@@ -446,12 +473,25 @@ $('roster').addEventListener('click',e=>{
     saveSession(s);renderLista();if(navigator.vibrate)navigator.vibrate(8);return}
   const b=e.target.closest('.row');if(!b)return;
   const s=getSession(true),pid=b.dataset.p;
+  if(s.marks[pid]==='J'){openWhy(pid);return}
   const nxt=CYCLE[(CYCLE.indexOf(s.marks[pid])+1)%CYCLE.length];
   if(nxt)s.marks[pid]=nxt;else delete s.marks[pid];
+  if(s.why&&nxt!=='J')delete s.why[pid];
   saveSession(s);renderLista();
+  if(nxt==='J')openWhy(pid);
   const pill=$('roster').querySelector(`[data-p="${pid}"] .pill`);if(pill)pill.classList.add('pop');
   if(navigator.vibrate)navigator.vibrate(8);
 });
+let whyPid=null;
+function openWhy(pid){whyPid=pid;const s=getSession(false),p=players.find(x=>x.id===pid);
+  $('whyName').textContent=p?p.name:'';
+  $('whySheet').querySelectorAll('[data-w]').forEach(b=>b.setAttribute('aria-pressed',whyOf(s,pid)===b.dataset.w));
+  $('whySheet').classList.remove('hidden')}
+function closeWhy(){$('whySheet').classList.add('hidden');whyPid=null}
+$('whySheet').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b||!whyPid)return;
+  const s=getSession(true);s.marks[whyPid]='J';s.why=s.why||{};s.why[whyPid]=b.dataset.w;saveSession(s);renderLista();closeWhy();if(navigator.vibrate)navigator.vibrate(8)});
+$('whyNone').onclick=()=>{if(!whyPid)return;const s=getSession(true);delete s.marks[whyPid];if(s.why)delete s.why[whyPid];saveSession(s);renderLista();closeWhy()};
+$('whyClose').onclick=closeWhy;
 $('typeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b){cur.type=b.dataset.t;renderLista()}});
 $('prev').onclick=()=>{cur.date=shiftDay(cur.date,-1);renderLista()};
 $('next').onclick=()=>{cur.date=shiftDay(cur.date,1);renderLista()};
@@ -472,7 +512,7 @@ function filtered(){
   return Object.values(sessions).filter(s=>hasData(s)&&(t==='all'||s.type===t)&&s.date>=from&&s.date<=to).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.type<b.type?-1:1);
 }
 function perPlayer(list){
-  return players.map(p=>{const c={P:0,F:0,J:0};let fis=0,fisN=0;list.forEach(s=>{const v=s.marks[p.id];if(v)c[v]++;if(fisApplies(s)){if(v==='P')fisN++;if(s.fis&&s.fis[p.id])fis++}});const n=c.P+c.F+c.J;return{p,c,n,fis,fisN,pct:n?Math.round(c.P/n*100):null}});
+  return players.map(p=>{const c={P:0,F:0,J:0,I:0},why={};let fis=0,fisN=0;list.forEach(s=>{const v=s.marks[p.id],st=stOf(s,p.id);if(st)c[st]++;if(st==='I'){const w=whyOf(s,p.id);why[w]=(why[w]||0)+1}if(fisApplies(s)){if(v==='P')fisN++;if(s.fis&&s.fis[p.id])fis++}});const n=c.P+c.F+c.J+c.I,nr=n-c.I;return{p,c,n,why,fis,fisN,pct:n?Math.round(c.P/n*100):null,pctR:nr?Math.round(c.P/nr*100):null}});
 }
 function byWeek(list){const g={};list.forEach(s=>{const w=weekStart(s.date);(g[w]=g[w]||[]).push(s)});return Object.keys(g).sort().map(w=>({w,list:g[w]}))}
 /* ---------- Previa convocatoria ---------- */
@@ -487,21 +527,21 @@ function renderPre(){
   $('preN').disabled=preWs>=weekStart(today);$('preN').style.opacity=$('preN').disabled?.35:1;
   const ses=days.map(d=>{const x=sessions[d+'_E'];return x&&hasData(x)?x:null});
   const done=ses.filter(Boolean).length;
-  const SYM={P:'✓',F:'✗',J:'J'};
+  const SYM={P:'✓',F:'✗',J:'J'};const symOf=(c,w)=>c==='I'?ABBR[w]:SYM[c];
   const rows=players.filter(p=>p.active!==false).map(p=>{
-    const cells=ses.map(x=>x?(x.marks[p.id]||'N'):null);
+    const cells=ses.map(x=>x?(stOf(x,p.id)||'N'):null),whys=ses.map(x=>whyOf(x,p.id));
     const pres=cells.filter(c=>c==='P').length;
-    const miss=days.map((d,i)=>cells[i]&&cells[i]!=='P'?{d,c:cells[i]}:null).filter(Boolean);
-    return{p,cells,pres,miss}});
+    const miss=days.map((d,i)=>cells[i]&&cells[i]!=='P'?{d,c:cells[i],w:whys[i]}:null).filter(Boolean);
+    return{p,cells,whys,pres,miss}});
   rows.sort((a,b)=>b.miss.length-a.miss.length||a.p.name.localeCompare(b.p.name,'es'));
   const inc=rows.filter(r=>r.miss.length);
   let h='';
   if(!done){h='<div class="empty">Aún no hay entrenos registrados esta semana.</div>'}
   else{
-    h+=inc.length?`<p class="preok"><b>${inc.length}</b> sin todos los entrenos registrados (${done} de 3):</p><ul class="prelist">`+inc.map(r=>`<li><b></b> — ${r.miss.map(m=>fmtDow(m.d)+(m.c==='J'?' (justif.)':m.c==='N'?' (sin marcar)':'')).join(', ')}</li>`).join('')+'</ul>'
+    h+=inc.length?`<p class="preok"><b>${inc.length}</b> sin todos los entrenos registrados (${done} de 3):</p><ul class="prelist">`+inc.map(r=>`<li><b></b> — ${r.miss.map(m=>fmtDow(m.d)+(m.c==='I'?' ('+WHY[m.w].toLowerCase()+')':m.c==='J'?' (justif.)':m.c==='N'?' (sin marcar)':'')).join(', ')}</li>`).join('')+'</ul>'
       :`<p class="preok">✅ Todos han hecho los ${done} entrenos registrados${done<3?' (de 3)':''}.</p>`;
     h+='<table class="pre"><thead><tr><th></th>'+days.map((d,i)=>`<th>${fmtDow(d)}<small>${ses[i]?'':(d>today?'pendiente':'sin datos')}</small></th>`).join('')+'<th>Total</th></tr></thead><tbody>'+
-      rows.map(r=>`<tr class="${r.miss.length?'inc':''}"><td class="nm"></td>${r.cells.map(c=>c?`<td><span class="mk ${c}">${SYM[c]||'–'}</span></td>`:'<td class="muted">·</td>').join('')}<td class="tot">${r.pres}/${done}</td></tr>`).join('')+'</tbody></table>';
+      rows.map(r=>`<tr class="${r.miss.length?'inc':''}"><td class="nm"></td>${r.cells.map((c,i)=>c?`<td><span class="mk ${c}" title="${c==='I'?WHY[r.whys[i]]:''}">${symOf(c,r.whys[i])||'–'}</span></td>`:'<td class="muted">·</td>').join('')}<td class="tot">${r.pres}/${done}</td></tr>`).join('')+'</tbody></table>';
   }
   $('preBody').innerHTML=h;
   $('preBody').querySelectorAll('.prelist li b').forEach((e,i)=>e.textContent=inc[i].p.name);
@@ -518,9 +558,9 @@ function renderStats(){
   if(!list.length){$('bars').innerHTML='<div class="empty">Aún no hay sesiones en este filtro.</div>'}
   else{
     rows.sort((a,b)=>(b.pct??-1)-(a.pct??-1));
-    $('bars').innerHTML=rows.map(r=>{const w=k=>(r.n?r.c[k]/r.n*100:0)+'%';return `<div class="bar"><div class="top"><span class="nm"></span><b>${r.pct==null?'–':r.pct+'%'}</b></div>
-      <div class="track"><span style="width:${w('P')};background:var(--ok)"></span><span style="width:${w('J')};background:var(--just)"></span><span style="width:${w('F')};background:var(--no)"></span></div>
-      <div class="sub">${r.c.P} presente · ${r.c.J} justif. · ${r.c.F} falta · <strong>físico ${r.fis}/${r.fisN}</strong></div></div>`}).join('');
+    $('bars').innerHTML=rows.map(r=>{const w=k=>(r.n?r.c[k]/r.n*100:0)+'%';return `<div class="bar"><div class="top"><span class="nm"></span><b>${r.pct==null?'–':r.pct+'%'}${r.c.I&&r.pctR!=null?` <small style="color:var(--exc);font-weight:600">· ${r.pctR}% sin inevitables</small>`:''}</b></div>
+      <div class="track"><span style="width:${w('P')};background:var(--ok)"></span><span style="width:${w('I')};background:var(--exc)"></span><span style="width:${w('J')};background:var(--just)"></span><span style="width:${w('F')};background:var(--no)"></span></div>
+      <div class="sub">${r.c.P} presente${r.c.I?` · <span style="color:var(--exc)">${Object.entries(r.why).map(([k,v])=>v+' '+WHY[k].toLowerCase()).join(', ')}</span>`:''} · ${r.c.J} justif. · ${r.c.F} falta · <strong>físico ${r.fis}/${r.fisN}</strong></div></div>`}).join('');
     $('bars').querySelectorAll('.nm').forEach((e,i)=>e.textContent=rows[i].p.name+(rows[i].p.active===false?' (baja)':''));
   }
   renderLine(byWeek(list));
@@ -557,22 +597,22 @@ async function download(name,text){
 }
 $('expRaw').onclick=()=>{
   const list=filtered(),names=Object.fromEntries(players.map(p=>[p.id,p.name]));
-  const rows=[['Semana (desde jueves)','Semana','Fecha','Tipo','Persona','Estado','Físico']];
+  const rows=[['Semana (desde jueves)','Semana','Fecha','Tipo','Persona','Estado','Motivo','Inevitable','Físico']];
   list.forEach(s=>{const ids=new Set([...Object.keys(s.marks),...Object.keys(s.fis||{})]);const ws=weekStart(s.date);
-    ids.forEach(pid=>rows.push([ws,weekLabel(ws),s.date,TYPES[s.type],names[pid]||pid,s.marks[pid]?LABEL[s.marks[pid]]:'',!fisApplies(s)?'':(s.fis&&s.fis[pid]?'Sí':'No')]))});
+    ids.forEach(pid=>rows.push([ws,weekLabel(ws),s.date,TYPES[s.type],names[pid]||pid,s.marks[pid]?LABEL[s.marks[pid]]:'',s.marks[pid]==='J'&&whyOf(s,pid)?WHY[whyOf(s,pid)]:'',stOf(s,pid)==='I'?'Sí':(s.marks[pid]==='J'?'No':''),!fisApplies(s)?'':(s.fis&&s.fis[pid]?'Sí':'No')]))});
   if(rows.length===1)return toast('No hay datos que exportar');
   download('asistencia-registro-'+todayISO()+'.csv',csv(rows));
 };
 $('expSum').onclick=()=>{
   const list=filtered();if(!list.length)return toast('No hay datos que exportar');
-  const rows=[['Persona','Presente','Justificada','Falta','Físico','Físicos posibles','Sesiones','% asistencia']];
-  perPlayer(list).forEach(r=>{if(r.n||r.p.active!==false)rows.push([r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.fisN,r.n,r.pct==null?'':r.pct])});
+  const rows=[['Persona','Presente','Inevitable (lesión/estudios/enfermedad)','Justificada (otro)','Falta','Físico','Físicos posibles','Sesiones','% asistencia','% sin inevitables']];
+  perPlayer(list).forEach(r=>{if(r.n||r.p.active!==false)rows.push([r.p.name,r.c.P,r.c.I,r.c.J,r.c.F,r.fis,r.fisN,r.n,r.pct==null?'':r.pct,r.pctR==null?'':r.pctR])});
   download('asistencia-resumen-'+todayISO()+'.csv',csv(rows));
 };
 $('expWeek').onclick=()=>{
   const list=filtered();if(!list.length)return toast('No hay datos que exportar');
-  const rows=[['Semana (desde jueves)','Semana','Persona','Presente','Justificada','Falta','Físico','Físicos posibles','Sesiones','% asistencia']];
-  byWeek(list).forEach(g=>perPlayer(g.list).forEach(r=>{if(r.n||r.fis)rows.push([g.w,weekLabel(g.w),r.p.name,r.c.P,r.c.J,r.c.F,r.fis,r.fisN,r.n,r.pct==null?'':r.pct])}));
+  const rows=[['Semana (desde jueves)','Semana','Persona','Presente','Inevitable (lesión/estudios/enfermedad)','Justificada (otro)','Falta','Físico','Físicos posibles','Sesiones','% asistencia','% sin inevitables']];
+  byWeek(list).forEach(g=>perPlayer(g.list).forEach(r=>{if(r.n||r.fis)rows.push([g.w,weekLabel(g.w),r.p.name,r.c.P,r.c.I,r.c.J,r.c.F,r.fis,r.fisN,r.n,r.pct==null?'':r.pct,r.pctR==null?'':r.pctR])}));
   download('asistencia-semanal-'+todayISO()+'.csv',csv(rows));
 };
 
@@ -586,7 +626,9 @@ function resTxt(m){const g=m.res.split('-').map(Number),o=m.home?g[0]:g[1],r=m.h
 function fmtM(m){return new Date(m.date+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})+' · '+m.time}
 function preDays(m){const ws=shiftDay(weekStart(m.date),-7);return[ws,shiftDay(ws,1),shiftDay(ws,4),shiftDay(ws,6)]}
 function trainMarks(m,pid){const d=preDays(m);const t0=(sessions[d[0]+'_E']&&hasData(sessions[d[0]+'_E']))?d[0]:d[1];
-  return[t0,d[2],d[3]].map(x=>{const s=sessions[x+'_E'];return s&&hasData(s)?(s.marks[pid]||'N'):''})}
+  return[t0,d[2],d[3]].map(x=>{const s=sessions[x+'_E'];return s&&hasData(s)?(stOf(s,pid)||'N'):''})}
+function lastWhy(m,pid){const ss=Object.values(sessions).filter(s=>s.date<=m.date&&s.date>=shiftDay(m.date,-21)&&s.marks&&s.marks[pid]).sort((a,b)=>a.date<b.date?1:-1);
+  const s=ss[0];return s&&stOf(s,pid)==='I'?whyOf(s,pid):null}
 function renderConv(){
   if($('msgBox'))$('msgBox').classList.add('hidden');
   const l=mList();
@@ -604,11 +646,11 @@ function renderConv(){
   $('cNum').innerHTML=sel.size+'<small>/'+active().length+'</small>';
   $('cTxt').textContent=sel.size?'convocados':'convocatoria sin hacer';
   const shown=canEdit?list:list.filter(p=>sel.has(p.id));
-  $('croster').innerHTML=shown.length?shown.map(p=>{const on=sel.has(p.id),tm=trainMarks(m,p.id);
-    return '<li class="prow"><button class="row" data-c="'+p.id+'"><span class="n"></span><span class="tr" title="Entrenos de la semana previa">'+tm.map(x=>'<i class="'+x+'"></i>').join('')+'</span><span class="pill '+(on?'C':'N')+'">'+(on?'Convocado':'No convocado')+'</span></button></li>'}).join('')
+  $('croster').innerHTML=shown.length?shown.map(p=>{const on=sel.has(p.id),tm=trainMarks(m,p.id),lw=lastWhy(m,p.id);
+    return '<li class="prow"><button class="row" data-c="'+p.id+'"><span class="n"></span>'+(lw?'<span class="wtag">'+WHY[lw]+'</span>':'')+'<span class="tr" title="Entrenos de la semana previa">'+tm.map(x=>'<i class="'+x+'"></i>').join('')+'</span><span class="pill '+(on?'C':'N')+'">'+(on?'Convocado':'No convocado')+'</span></button></li>'}).join('')
     :'<li class="empty" style="padding:14px">Aún no hay convocatoria para este partido.</li>';
   $('croster').querySelectorAll('.row').forEach((r,k)=>r.querySelector('.n').textContent=shown[k].name);
-  $('cHint').textContent=canEdit?'Toca un nombre para convocar o quitar. Los cuadritos son los 3 entrenos de la semana previa (verde presente, ámbar justificada, rojo falta).':'Cuadritos: entrenos de la semana previa (verde presente, ámbar justificada, rojo falta).';
+  $('cHint').textContent=canEdit?'Toca un nombre para convocar o quitar. Los cuadritos son los 3 entrenos de la semana previa (verde presente, morado lesión/estudios/enfermedad, ámbar justificada, rojo falta). La etiqueta morada indica el motivo de su última falta inevitable.':'Cuadritos: entrenos de la semana previa (verde presente, morado lesión/estudios/enfermedad, ámbar justificada, rojo falta).';
   renderConvStats();
 }
 function renderConvStats(){
@@ -618,7 +660,7 @@ function renderConvStats(){
   const ent=Object.values(sessions).filter(s=>s.type==='E'&&hasData(s));
   const rows=players.filter(p=>p.active!==false||done.some(m=>conv[m.id].includes(p.id))).map(p=>{
     const n=done.filter(m=>conv[m.id].includes(p.id)).length;
-    let pr=0,tot=0;ent.forEach(s=>{const v=s.marks[p.id];if(v){tot++;if(v==='P')pr++}});
+    let pr=0,tot=0;ent.forEach(s=>{const v=stOf(s,p.id);if(v&&v!=='I'){tot++;if(v==='P')pr++}});
     const last=done.slice().reverse().find(m=>conv[m.id].includes(p.id));
     return{p,n,pct:done.length?Math.round(n/done.length*100):null,asis:tot?Math.round(pr/tot*100):null,last}});
   rows.sort((a,b)=>b.n-a.n||a.p.name.localeCompare(b.p.name,'es'));
