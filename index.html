@@ -176,6 +176,10 @@ table.cst th{font-size:.78rem;color:var(--muted);font-weight:600;text-align:righ
 table.cst th:first-child,table.cst td:first-child{text-align:left}
 table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
 .ro .owner-act{display:none}
+.tseg{display:flex;gap:6px;margin:10px 0 2px}.tseg button{flex:1;padding:9px 6px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700}
+.tseg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+li.ghead{list-style:none;padding:12px 4px 4px;font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.gk{flex:none;margin-right:8px;width:20px;height:20px;border-radius:6px;display:inline-grid;place-items:center;font-size:.72rem;font-weight:800;background:var(--line);color:var(--ink)}
 /* motivos de falta justificada */
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.18)}
 .sheet h3{margin:0 0 2px;font-size:1.05rem}.sheet p{margin:0 0 12px;color:var(--muted);font-size:.88rem}
@@ -266,6 +270,7 @@ table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;f
   <!-- CONVOCATORIA -->
   <section id="v-conv" class="hidden">
     <h1 class="big" style="font-size:2.1rem;margin:6px 0 0">Convocatoria</h1>
+    <div class="tseg" id="teamSeg" role="group" aria-label="Equipo"><button data-t="JUN" aria-pressed="true">Júnior A</button><button data-t="2A" aria-pressed="false">2a Catalana</button></div>
     <div class="mhead"><button class="iconbtn" id="mPrev" aria-label="Partido anterior">‹</button><div class="pt"><b id="mTit"></b><small id="mSub"></small></div><button class="iconbtn" id="mNext" aria-label="Partido siguiente">›</button></div>
     <div class="tally"><div class="num" id="cNum">0</div><div class="muted" id="cTxt">convocados</div></div>
     <ul class="roster" id="croster"></ul>
@@ -290,7 +295,7 @@ table.cst td{padding:8px 4px;border-top:1px solid var(--line);text-align:right;f
     <div class="panel" style="margin-top:12px"><table class="cst" id="cst"></table></div>
     <p class="hint muted">% convocado sobre los partidos con convocatoria hecha. Asistencia: entrenos de toda la temporada, sin contar faltas por lesión, estudios o enfermedad.</p>
     <div class="actions" style="margin-top:8px"><button class="btn" id="expConv">Convocatorias (CSV)</button></div>
-    <h2>Calendario Júnior A</h2>
+    <h2 id="calTit">Calendario Júnior A</h2>
     <div class="panel"><ul class="mlist" id="mlist"></ul></div>
     <p class="hint muted" id="mSrc"></p>
   </section>
@@ -328,7 +333,7 @@ const LS='asistencia-equipo.v1';
 const $=id=>document.getElementById(id);
 
 let players=Array.from({length:9},(_,i)=>({id:'p'+(i+1),name:'Jugador '+(i+1),active:true}));
-let sessions={};let conv={};let MATCHES={matches:[]};              // id -> {id,date,type,marks:{pid:'P'|'F'|'J'}}
+let sessions={};let conv={};let matchAtt={};let extras=[];let MATCHES={matches:[]};              // id -> {id,date,type,marks:{pid:'P'|'F'|'J'}}
 let cur={date:todayISO(),type:'E'};
 function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function shiftDay(iso,n){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -341,7 +346,7 @@ const OWNER='ogonzalez-cell',REPO='asistencia',API='https://api.github.com/repos
 const TK='asistencia-gh-token';
 let downloads=null, canEdit=false, dirty=false;
 let DATA=(()=>{try{return JSON.parse($('data').textContent)}catch(e){return{rev:0,sessions:{}}}})();
-function applyData(d){DATA=d;if(d.players&&d.players.length)players=d.players.map(p=>({...p}));sessions=JSON.parse(JSON.stringify(d.sessions||{}));conv=JSON.parse(JSON.stringify(d.conv||{}))}
+function applyData(d){DATA=d;if(d.players&&d.players.length)players=d.players.map(p=>({...p}));sessions=JSON.parse(JSON.stringify(d.sessions||{}));conv=JSON.parse(JSON.stringify(d.conv||{}));matchAtt=JSON.parse(JSON.stringify(d.matchAtt||{}));extras=JSON.parse(JSON.stringify(d.extras||[]))}
 applyData(DATA);
 function token(){try{return localStorage.getItem(TK)}catch(e){return null}}
 function b64(s){return btoa(unescape(encodeURIComponent(s)))}
@@ -369,12 +374,12 @@ function snapshot(){const s={};Object.values(sessions).forEach(x=>{if(Object.key
 function convSnap(){const o={};Object.entries(conv).forEach(([k,v])=>{if(v&&v.length)o[k]=v});return o}
 function markDirty(){
   dirty=true;$('savebar').classList.remove('hidden');
-  try{localStorage.setItem(LS,JSON.stringify({base:DATA.rev,players,sessions,conv}))}catch(e){}
+  try{localStorage.setItem(LS,JSON.stringify({base:DATA.rev,players,sessions,conv,matchAtt,extras}))}catch(e){}
 }
 function saveSession(){markDirty()}
 function saveTeam(){markDirty()}
 function loadDraft(){
-  try{const d=JSON.parse(localStorage.getItem(LS));if(d&&d.base===DATA.rev){players=d.players;sessions=d.sessions||{};conv=d.conv||{};markDirty()}}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem(LS));if(d&&d.base===DATA.rev){players=d.players;sessions=d.sessions||{};conv=d.conv||{};matchAtt=d.matchAtt||{};extras=d.extras||extras;markDirty()}}catch(e){}
 }
 function updatedTxt(){return DATA.updated?' · actualizado '+new Date(DATA.updated).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}
 function setReadOnly(){
@@ -394,7 +399,7 @@ $('save').onclick=async()=>{
     const cur=await fetchRemote(t);
     const remoteRev=(cur.data&&cur.data.rev)||0;
     if(remoteRev>(DATA.rev||0)&&!confirm('Hay una versión más reciente guardada desde otro dispositivo. ¿Sobrescribirla con tus cambios?')){$('saveTxt').textContent='Cambios sin guardar';return}
-    const data={rev:Math.max(DATA.rev||0,remoteRev)+1,updated:new Date().toISOString(),players,sessions:snapshot(),conv:convSnap()};
+    const data={rev:Math.max(DATA.rev||0,remoteRev)+1,updated:new Date().toISOString(),players,sessions:snapshot(),conv:convSnap(),matchAtt,extras};
     const body={message:'Asistencia '+new Date().toLocaleString('es-ES'),content:b64(JSON.stringify(data,null,1)),branch:'main'};
     if(cur.sha)body.sha=cur.sha;
     const r=await fetch(API,{method:'PUT',headers:{Authorization:'Bearer '+t,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -482,15 +487,17 @@ $('roster').addEventListener('click',e=>{
   const pill=$('roster').querySelector(`[data-p="${pid}"] .pill`);if(pill)pill.classList.add('pop');
   if(navigator.vibrate)navigator.vibrate(8);
 });
-let whyPid=null;
-function openWhy(pid){whyPid=pid;const s=getSession(false),p=players.find(x=>x.id===pid);
-  $('whyName').textContent=p?p.name:'';
-  $('whySheet').querySelectorAll('[data-w]').forEach(b=>b.setAttribute('aria-pressed',whyOf(s,pid)===b.dataset.w));
+let whyPid=null,whyCb=null;
+function openWhyFor(name,cur,pick,none){whyCb={pick,none};whyPid='x';$('whyName').textContent=name||'';
+  $('whySheet').querySelectorAll('[data-w]').forEach(b=>b.setAttribute('aria-pressed',cur===b.dataset.w));
   $('whySheet').classList.remove('hidden')}
-function closeWhy(){$('whySheet').classList.add('hidden');whyPid=null}
-$('whySheet').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b||!whyPid)return;
-  const s=getSession(true);s.marks[whyPid]='J';s.why=s.why||{};s.why[whyPid]=b.dataset.w;saveSession(s);renderLista();closeWhy();if(navigator.vibrate)navigator.vibrate(8)});
-$('whyNone').onclick=()=>{if(!whyPid)return;const s=getSession(true);delete s.marks[whyPid];if(s.why)delete s.why[whyPid];saveSession(s);renderLista();closeWhy()};
+function openWhy(pid){const s=getSession(false),p=players.find(x=>x.id===pid);
+  openWhyFor(p?p.name:'',whyOf(s,pid),w=>{const s=getSession(true);s.marks[pid]='J';s.why=s.why||{};s.why[pid]=w;saveSession(s);renderLista()},
+    ()=>{const s=getSession(true);delete s.marks[pid];if(s.why)delete s.why[pid];saveSession(s);renderLista()})}
+function closeWhy(){$('whySheet').classList.add('hidden');whyPid=null;whyCb=null}
+$('whySheet').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b||!whyCb)return;
+  const cb=whyCb;closeWhy();cb.pick(b.dataset.w);if(navigator.vibrate)navigator.vibrate(8)});
+$('whyNone').onclick=()=>{if(!whyCb)return;const cb=whyCb;closeWhy();cb.none()};
 $('whyClose').onclick=closeWhy;
 $('typeSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b){cur.type=b.dataset.t;renderLista()}});
 $('prev').onclick=()=>{cur.date=shiftDay(cur.date,-1);renderLista()};
@@ -617,11 +624,18 @@ $('expWeek').onclick=()=>{
 };
 
 /* ---------- Convocatoria ---------- */
-let curM=null;
-function mList(){return (MATCHES.matches||[]).slice().sort((a,b)=>(a.date+a.time)<(b.date+b.time)?-1:1)}
+let curM=null,curT='JUN';
+const TEAMS={JUN:{label:'Júnior A',head:'Junior'},'2A':{label:'2a Catalana',head:'2a Catalana'}};
+const GRP={JUN:'Júnior',JUV:'Juvenil A',SEN:'Sènior'};
+function allP(){return players.concat(extras)}
+function pName(p,t){return t==='2A'&&p.full?p.full:p.name}
+function pool(t){return t==='2A'?active().map(p=>({...p,grp:'JUN'})).concat(extras.filter(x=>x.active!==false).map(x=>({...x,grp:x.team}))):active().map(p=>({...p,grp:'JUN'}))}
+function mTeam(m){return m.team||'JUN'}
+function mList(t){t=t||curT;return (MATCHES.matches||[]).filter(m=>mTeam(m)===t).sort((a,b)=>(a.date+a.time)<(b.date+b.time)?-1:1)}
 function defMatch(){const l=mList(),t=todayISO();const n=l.find(m=>m.date>=t);return n?n.id:(l.length?l[l.length-1].id:null)}
-function mTitle(m){return 'J'+m.jornada+' · '+titleCase(m.rival)}
-function titleCase(x){return (x||'').toLowerCase().replace(/(^|[\s\-'(])([\p{L}])/gu,(a,b,c)=>b+c.toUpperCase()).replace(/\b(Hc|Chp|Cp|Ch|Ce|Uehc?)\b/g,w=>w.toUpperCase())}
+function mTitle(m){return (m.jornada?'J'+m.jornada+' · ':'')+titleCase(m.rival)}
+function mShort(m){return m.jornada?'J'+m.jornada:new Date(m.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'numeric'})}
+function titleCase(x){return (x||'').toLowerCase().replace(/(^|[\s\-'(])([\p{L}])/gu,(a,b,c)=>b+c.toUpperCase()).replace(/\b(Hc|Chp|Cp|Ch|Ce|Uehc?|Geieg)\b/g,w=>w.toUpperCase())}
 function resTxt(m){const g=m.res.split('-').map(Number),o=m.home?g[0]:g[1],r=m.home?g[1]:g[0];return (o>r?'Victoria ':o<r?'Derrota ':'Empate ')+o+'-'+r}
 function fmtM(m){return new Date(m.date+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})+' · '+m.time}
 function preDays(m){const ws=shiftDay(weekStart(m.date),-7);return[ws,shiftDay(ws,1),shiftDay(ws,4),shiftDay(ws,6)]}
@@ -629,8 +643,15 @@ function trainMarks(m,pid){const d=preDays(m);const t0=(sessions[d[1]+'_E']&&has
   return[t0,d[2],d[3]].map(x=>{const s=sessions[x+'_E'];return s&&hasData(s)?(stOf(s,pid)||'N'):''})}
 function lastWhy(m,pid){const ss=Object.values(sessions).filter(s=>s.date<=m.date&&s.date>=shiftDay(m.date,-21)&&s.marks&&s.marks[pid]).sort((a,b)=>a.date<b.date?1:-1);
   const s=ss[0];return s&&stOf(s,pid)==='I'?whyOf(s,pid):null}
+// asistencia al partido: matchAtt[id][pid] = 'F' (no vino) o motivo L/E/M/O
+function attOf(mid,pid){return (matchAtt[mid]||{})[pid]}
+function attLabel(a){return !a?'Jugó':a==='F'?'No vino':WHY[a]}
+function attCls(a){return !a?'P':a==='F'?'F':INEV.has(a)?'I':'J'}
+function setAtt(mid,pid,v){matchAtt[mid]=matchAtt[mid]||{};if(v)matchAtt[mid][pid]=v;else delete matchAtt[mid][pid];if(!Object.keys(matchAtt[mid]).length)delete matchAtt[mid];markDirty();renderConv()}
 function renderConv(){
   if($('msgBox'))$('msgBox').classList.add('hidden');
+  $('teamSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===curT));
+  $('calTit').textContent='Calendario '+TEAMS[curT].label;
   const l=mList();
   if(!l.length){$('mTit').textContent='Sin partidos';$('mSub').textContent='No se ha podido cargar el calendario';$('croster').innerHTML='';renderConvStats();return}
   if(!curM||!l.find(m=>m.id===curM))curM=defMatch();
@@ -642,63 +663,81 @@ function renderConv(){
   sub.append(fmtM(m)+' · ');const b=document.createElement('span');b.className='badge '+(m.home?'home':'away');b.textContent=m.home?'Casa':'Fuera';sub.append(b);
   if(!m.home&&m.poblacio)sub.append(' '+m.poblacio);
   const [hh,mm]=m.time.split(':').map(Number),cm=hh*60+mm-75;if(m.res)sub.append(' · '+resTxt(m));sub.append(document.createElement('br'),'Convocatoria '+String(Math.floor(cm/60)).padStart(2,'0')+':'+String(cm%60).padStart(2,'0')+(m.nota?' · '+m.nota:''));
-  const sel=new Set(conv[m.id]||[]),list=canEdit?active():players.filter(p=>sel.has(p.id)||p.active!==false);
-  $('cNum').innerHTML=sel.size+'<small>/'+active().length+'</small>';
-  $('cTxt').textContent=sel.size?'convocados':'convocatoria sin hacer';
-  const shown=canEdit?list:list.filter(p=>sel.has(p.id));
-  $('croster').innerHTML=shown.length?shown.map(p=>{const on=sel.has(p.id),tm=trainMarks(m,p.id),lw=lastWhy(m,p.id);
-    return '<li class="prow"><button class="row" data-c="'+p.id+'"><span class="n"></span>'+(lw?'<span class="wtag">'+WHY[lw]+'</span>':'')+'<span class="tr" title="Entrenos de la semana previa">'+tm.map(x=>'<i class="'+x+'"></i>').join('')+'</span><span class="pill '+(on?'C':'N')+'">'+(on?'Convocado':'No convocado')+'</span></button></li>'}).join('')
-    :'<li class="empty" style="padding:14px">Aún no hay convocatoria para este partido.</li>';
-  $('croster').querySelectorAll('.row').forEach((r,k)=>r.querySelector('.n').textContent=shown[k].name);
-  $('cHint').textContent=canEdit?'Toca un nombre para convocar o quitar. Los cuadritos son los 3 entrenos de la semana previa (verde presente, morado lesión/estudios/enfermedad, ámbar justificada, rojo falta). La etiqueta morada indica el motivo de su última falta inevitable.':'Cuadritos: entrenos de la semana previa (verde presente, morado lesión/estudios/enfermedad, ámbar justificada, rojo falta).';
+  const sel=new Set(conv[m.id]||[]),pl=pool(curT),played=m.date<=todayISO();
+  const nAus=[...sel].filter(pid=>attOf(m.id,pid)).length;
+  $('cNum').innerHTML=sel.size+'<small>/'+pl.length+'</small>';
+  $('cTxt').textContent=sel.size?('convocados'+(played&&nAus?' · '+nAus+(nAus>1?' no vinieron':' no vino'):'')):'convocatoria sin hacer';
+  const shown=canEdit?pl:pl.filter(p=>sel.has(p.id));
+  let html='',lastG=null;
+  shown.forEach((p,k)=>{
+    if(curT==='2A'&&p.grp!==lastG){html+='<li class="ghead">'+GRP[p.grp]+'</li>';lastG=p.grp}
+    const on=sel.has(p.id),isJ=p.grp==='JUN',tm=isJ?trainMarks(m,p.id):[],lw=isJ?lastWhy(m,p.id):null,a=attOf(m.id,p.id);
+    html+='<li class="prow"><button class="row" data-c="'+p.id+'" data-k="'+k+'"><span class="n"></span>'+(p.gk?'<span class="gk">P</span>':'')+(lw?'<span class="wtag">'+WHY[lw]+'</span>':'')
+      +(isJ?'<span class="tr" title="Entrenos de la semana previa">'+tm.map(x=>'<i class="'+x+'"></i>').join('')+'</span>':'')
+      +(on&&played?'<span class="pill '+attCls(a)+'" data-att="'+p.id+'">'+attLabel(a)+'</span>':'<span class="pill '+(on?'C':'N')+'">'+(on?'Convocado':'No convocado')+'</span>')
+      +'</button></li>'});
+  $('croster').innerHTML=html||'<li class="empty" style="padding:14px">Aún no hay convocatoria para este partido.</li>';
+  $('croster').querySelectorAll('.row').forEach(r=>{const p=shown[+r.dataset.k];r.querySelector('.n').textContent=pName(p,curT)});
+  $('cHint').textContent=(canEdit?(played?'Partido jugado: toca la etiqueta de un convocado para marcar si no vino (falta) o el motivo (lesión, estudios, enfermedad, otro). Toca el nombre para convocar o quitar. ':'Toca un nombre para convocar o quitar. '):'')+'Cuadritos: entrenos de la semana previa de los juniors (verde presente, morado lesión/estudios/enfermedad, ámbar justificada, rojo falta).';
   renderConvStats();
 }
 function renderConvStats(){
-  const l=mList(),done=l.filter(m=>(conv[m.id]||[]).length);
+  const l=mList(),done=l.filter(m=>(conv[m.id]||[]).length),t=todayISO(),dp=done.filter(m=>m.date<=t);
   $('ckM').textContent=done.length;$('ckN').textContent=l.length;
   $('ckA').textContent=done.length?(done.reduce((a,m)=>a+conv[m.id].length,0)/done.length).toFixed(1):'–';
   const ent=Object.values(sessions).filter(s=>s.type==='E'&&hasData(s));
-  const rows=players.filter(p=>p.active!==false||done.some(m=>conv[m.id].includes(p.id))).map(p=>{
+  const pl=pool(curT),ids=new Set(pl.map(p=>p.id));
+  done.forEach(m=>conv[m.id].forEach(pid=>{if(!ids.has(pid)){const p=allP().find(x=>x.id===pid);if(p){pl.push({...p,grp:p.team||'JUN'});ids.add(pid)}}}));
+  const rows=pl.map(p=>{
     const n=done.filter(m=>conv[m.id].includes(p.id)).length;
-    let pr=0,tot=0;ent.forEach(s=>{const v=stOf(s,p.id);if(v&&v!=='I'){tot++;if(v==='P')pr++}});
+    let jug=0,fa=0,ju=0;dp.forEach(m=>{if(!conv[m.id].includes(p.id))return;const a=attOf(m.id,p.id);if(!a)jug++;else if(a==='F')fa++;else ju++});
+    let pr=0,tot=0;if(p.grp==='JUN')ent.forEach(s=>{const v=stOf(s,p.id);if(v&&v!=='I'){tot++;if(v==='P')pr++}});
     const last=done.slice().reverse().find(m=>conv[m.id].includes(p.id));
-    return{p,n,pct:done.length?Math.round(n/done.length*100):null,asis:tot?Math.round(pr/tot*100):null,last}});
+    return{p,n,jug,fa,ju,pct:done.length?Math.round(n/done.length*100):null,asis:tot?Math.round(pr/tot*100):null,last}});
   rows.sort((a,b)=>b.n-a.n||a.p.name.localeCompare(b.p.name,'es'));
-  $('cst').innerHTML='<thead><tr><th>Jugador</th><th>Conv.</th><th>%</th><th>Asist.</th><th>Último</th></tr></thead><tbody>'+rows.map(r=>'<tr><td></td><td>'+r.n+'/'+done.length+'</td><td>'+(r.pct==null?'–':r.pct+'%')+'</td><td>'+(r.asis==null?'–':r.asis+'%')+'</td><td>'+(r.last?'J'+r.last.jornada:'–')+'</td></tr>').join('')+'</tbody>';
-  $('cst').querySelectorAll('tbody td:first-child').forEach((e,i)=>e.textContent=rows[i].p.name);
-  const t=todayISO(),multi=new Set(l.map(m=>m.comp)).size>1;
-  $('mlist').innerHTML=l.map(m=>{const n=(conv[m.id]||[]).length;return '<li class="'+(m.id===curM?'sel':'')+'" data-m="'+m.id+'"><div class="d"><b></b><small>'+(multi&&m.comp?m.comp+' · ':'')+fmtM(m)+' · '+(m.home?'Casa':'Fuera')+(m.res?' · '+resTxt(m):(m.date<t?' · jugado':''))+'</small></div><span class="c">'+(n?n+' conv.':'—')+'</span></li>'}).join('');
+  $('cst').innerHTML='<thead><tr><th>Jugador</th><th>Conv.</th><th>%</th><th>Jugó</th><th>No vino</th><th>Asist.</th><th>Último</th></tr></thead><tbody>'+rows.map(r=>'<tr><td></td><td>'+r.n+'/'+done.length+'</td><td>'+(r.pct==null?'–':r.pct+'%')+'</td><td>'+r.jug+'</td><td>'+(r.fa||r.ju?(r.fa?'<span style="color:var(--no)">'+r.fa+' falta'+(r.fa>1?'s':'')+'</span>':'')+(r.fa&&r.ju?' · ':'')+(r.ju?'<span style="color:var(--exc)">'+r.ju+' justif.</span>':''):'–')+'</td><td>'+(r.asis==null?'–':r.asis+'%')+'</td><td>'+(r.last?mShort(r.last):'–')+'</td></tr>').join('')+'</tbody>';
+  $('cst').querySelectorAll('tbody td:first-child').forEach((e,i)=>e.textContent=pName(rows[i].p,curT));
+  const multi=new Set(l.map(m=>m.comp)).size>1;
+  $('mlist').innerHTML=l.map(m=>{const n=(conv[m.id]||[]).length,na=Object.keys(matchAtt[m.id]||{}).filter(pid=>(conv[m.id]||[]).includes(pid)).length;return '<li class="'+(m.id===curM?'sel':'')+'" data-m="'+m.id+'"><div class="d"><b></b><small>'+(multi&&m.comp?m.comp+' · ':'')+fmtM(m)+' · '+(m.home?'Casa':'Fuera')+(m.res?' · '+resTxt(m):(m.date<t?' · jugado':''))+'</small></div><span class="c">'+(n?n+' conv.'+(na?' · '+na+' no':''):'—')+'</span></li>'}).join('');
   $('mlist').querySelectorAll('li').forEach((e,i)=>e.querySelector('b').textContent=mTitle(l[i]));
   $('mSrc').textContent=MATCHES.updated?'Calendario: '+(MATCHES.source||'FCP')+' · actualizado '+new Date(MATCHES.updated).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
 }
+$('teamSeg').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b||b.dataset.t===curT)return;curT=b.dataset.t;curM=null;renderConv()});
 $('croster').addEventListener('click',e=>{
-  if(!canEdit)return;const b=e.target.closest('[data-c]');if(!b||!curM)return;
-  const a=new Set(conv[curM]||[]),pid=b.dataset.c;a.has(pid)?a.delete(pid):a.add(pid);
-  conv[curM]=[...a];markDirty();renderConv();if(navigator.vibrate)navigator.vibrate(8);
+  if(!canEdit||!curM)return;
+  const at=e.target.closest('[data-att]');
+  if(at){const pid=at.dataset.att,a=attOf(curM,pid),p=allP().find(x=>x.id===pid);
+    if(!a)setAtt(curM,pid,'F');
+    else if(a==='F')openWhyFor(pName(p,curT),null,w=>setAtt(curM,pid,w),()=>setAtt(curM,pid,null));
+    else setAtt(curM,pid,null);
+    if(navigator.vibrate)navigator.vibrate(8);return}
+  const b=e.target.closest('[data-c]');if(!b)return;
+  const s=new Set(conv[curM]||[]),pid=b.dataset.c;
+  if(s.has(pid)){s.delete(pid);if(matchAtt[curM])delete matchAtt[curM][pid]}else s.add(pid);
+  conv[curM]=[...s];markDirty();renderConv();if(navigator.vibrate)navigator.vibrate(8);
 });
 $('mlist').addEventListener('click',e=>{const li=e.target.closest('[data-m]');if(li){curM=li.dataset.m;renderConv();window.scrollTo({top:0,behavior:'smooth'})}});
 $('mPrev').onclick=()=>{const l=mList(),i=l.findIndex(m=>m.id===curM);if(i>0){curM=l[i-1].id;renderConv()}};
 $('mNext').onclick=()=>{const l=mList(),i=l.findIndex(m=>m.id===curM);if(i<l.length-1){curM=l[i+1].id;renderConv()}};
-$('cAll').onclick=()=>{if(!curM)return;conv[curM]=active().map(p=>p.id);markDirty();renderConv();toast('Todos convocados')};
-$('cClear').onclick=()=>{if(!curM||!(conv[curM]||[]).length)return;if(!confirm('¿Borrar la convocatoria de este partido?'))return;delete conv[curM];markDirty();renderConv()};
+$('cAll').onclick=()=>{if(!curM)return;conv[curM]=(curT==='2A'?active():active()).map(p=>p.id);markDirty();renderConv();toast(curT==='2A'?'Todos los juniors convocados':'Todos convocados')};
+$('cClear').onclick=()=>{if(!curM||!(conv[curM]||[]).length)return;if(!confirm('¿Borrar la convocatoria de este partido?'))return;delete conv[curM];delete matchAtt[curM];markDirty();renderConv()};
 const DIES=['diumenge','dilluns','dimarts','dimecres','dijous','divendres','dissabte'];
 function convText(m){
-  const [y,mo,da]=m.date.split('-'),dia=DIES[new Date(m.date+'T12:00:00').getDay()];
+  const t=mTeam(m),[y,mo,da]=m.date.split('-'),dia=DIES[new Date(m.date+'T12:00:00').getDay()];
   const [hh,mm]=m.time.split(':').map(Number),c=hh*60+mm-75,hc=String(Math.floor(c/60)).padStart(2,'0')+':'+String(c%60).padStart(2,'0');
   const rival=titleCase(m.rival);
   const lloc=m.home?'a Sant Celoni a les '+m.time+' contra '+rival:'a '+rival+(m.poblacio?' ('+m.poblacio+')':'')+' a les '+m.time;
-  const ids=conv[m.id]||[],byId=Object.fromEntries(players.map(p=>[p.id,p]));
+  const ids=conv[m.id]||[],byId=Object.fromEntries(allP().map(p=>[p.id,p]));
   const ps=ids.map(i=>byId[i]).filter(Boolean).sort((a,b)=>(b.gk?1:0)-(a.gk?1:0));
-  return 'Junior\n\nPartit '+dia+' '+da+'/'+mo+'/'+y+' '+lloc+'\n\nHora convocatòria: '+hc+'\nHora partit: '+m.time+'\n\n'+ps.map(p=>p.name+(p.gk?' - p':'')).join('\n');
+  return TEAMS[t].head+'\n\nPartit '+dia+' '+da+'/'+mo+'/'+y+' '+lloc+'\n\nHora convocatòria: '+hc+'\nHora partit: '+m.time+'\n\n'+ps.map(p=>pName(p,t)+(p.gk?' - p':'')).join('\n');
 }
 $('cMsg').onclick=()=>{const m=mList().find(x=>x.id===curM);if(!m)return;if(!(conv[m.id]||[]).length){toast('Primero marca los convocados');return}
   $('msgTxt').value=convText(m);$('msgBox').classList.remove('hidden');$('msgBox').scrollIntoView({behavior:'smooth',block:'center'})};
 $('msgCopy').onclick=async()=>{const t=$('msgTxt').value;try{await navigator.clipboard.writeText(t);toast('Copiado')}catch(e){$('msgTxt').select();document.execCommand('copy');toast('Copiado')}};
 $('msgShare').onclick=async()=>{const t=$('msgTxt').value;if(navigator.share){try{await navigator.share({text:t})}catch(e){}}else{try{await navigator.clipboard.writeText(t);toast('Copiado')}catch(e){}}};
 $('expConv').onclick=()=>{
-  const names=Object.fromEntries(players.map(p=>[p.id,p.name]));
-  const rows=[['Jornada','Fecha','Hora','Local/Fuera','Rival','Persona','Convocado']];
-  mList().forEach(m=>{const c=new Set(conv[m.id]||[]);if(!c.size)return;players.forEach(p=>{if(p.active===false&&!c.has(p.id))return;rows.push(['J'+m.jornada,m.date,m.time,m.home?'Casa':'Fuera',m.rival,names[p.id],c.has(p.id)?'Sí':'No'])})});
+  const rows=[['Equipo','Jornada','Fecha','Hora','Local/Fuera','Rival','Persona','Grupo','Convocado','Asistencia']];
+  ['JUN','2A'].forEach(t=>mList(t).forEach(m=>{const c=new Set(conv[m.id]||[]);if(!c.size)return;pool(t).forEach(p=>{const a=attOf(m.id,p.id);rows.push([TEAMS[t].label,m.jornada?'J'+m.jornada:'',m.date,m.time,m.home?'Casa':'Fuera',m.rival,pName(p,t),GRP[p.grp],c.has(p.id)?'Sí':'No',c.has(p.id)&&m.date<=todayISO()?attLabel(a):''])})}));
   const csv='\ufeff'+rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='convocatorias.csv';document.body.appendChild(a);a.click();a.remove();
 };
