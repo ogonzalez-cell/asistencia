@@ -309,9 +309,6 @@ li.ghead{list-style:none;padding:12px 4px 4px;font-size:.78rem;font-weight:700;c
     <h1 class="big" style="font-size:2.1rem;margin:6px 0 12px">Equipo</h1>
     <ul class="roster team" id="team"></ul>
     <div class="actions"><button class="btn" id="addP">Añadir persona</button></div>
-    <h2>Enlaces</h2>
-    <p class="hint muted" id="keyInfo">Los datos se guardan cifrados. Comparte el enlace con la clave: sin él, nadie puede leer el archivo de datos.</p>
-    <div class="actions"><button class="btn primary" id="lnkPub">Copiar enlace para compartir</button><button class="btn" id="lnkEd">Copiar enlace de edición</button></div>
     <div class="actions"><button class="btn danger" id="logout">Salir del modo edición en este dispositivo</button></div>
     <p class="hint muted">Los cambios de nombre se guardan solos. Si quitas a alguien, su historial se conserva en los CSV.</p>
   </section>
@@ -358,7 +355,7 @@ applyData(DATA);
 function token(){try{return localStorage.getItem(TK)}catch(e){return null}}
 function b64(s){return btoa(unescape(encodeURIComponent(s)))}
 function unb64(s){return decodeURIComponent(escape(atob(s.replace(/\s/g,''))))}
-/* ---------- cifrado de data.json (AES-GCM; la clave va en el enlace tras #k=) ---------- */
+/* ---------- lectura de data.json cifrado (solo para leer la versión cifrada del 22/10; ya no se cifra al guardar) ---------- */
 const KK='asistencia-key';let NOKEY=false;
 const b64u=a=>btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
@@ -428,7 +425,7 @@ $('save').onclick=async()=>{
     const remoteRev=(cur.data&&cur.data.rev)||0;
     if(remoteRev>(DATA.rev||0)&&!confirm('Hay una versión más reciente guardada desde otro dispositivo. ¿Sobrescribirla con tus cambios?')){$('saveTxt').textContent='Cambios sin guardar';return}
     const data={rev:Math.max(DATA.rev||0,remoteRev)+1,updated:new Date().toISOString(),players,sessions:snapshot(),conv:convSnap(),matchAtt,extras};
-    const body={message:'Asistencia '+new Date().toLocaleString('es-ES'),content:b64(JSON.stringify(await encryptData(data))),branch:'main'};
+    const body={message:'Asistencia '+new Date().toLocaleString('es-ES'),content:b64(JSON.stringify(data,null,1)),branch:'main'};
     if(cur.sha)body.sha=cur.sha;
     const r=await fetch(API,{method:'PUT',headers:{Authorization:'Bearer '+t,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
     if(r.status===401||r.status===403){toast('Token no válido o caducado');$('saveTxt').textContent='Cambios sin guardar';return}
@@ -444,9 +441,6 @@ $('discard').onclick=()=>{
   try{localStorage.removeItem(LS)}catch(e){}
   applyData(DATA);dirty=false;$('savebar').classList.add('hidden');renderAll();
 };
-async function copyTxt(t){try{await navigator.clipboard.writeText(t);toast('Enlace copiado')}catch(e){prompt('Copia este enlace:',t)}}
-$('lnkPub').onclick=()=>{if(!keyStr())newKey();copyTxt(shareLink(false))};
-$('lnkEd').onclick=()=>{if(!keyStr())newKey();copyTxt(shareLink(true))};
 $('logout').onclick=()=>{
   if(!confirm('¿Quitar el modo edición de este dispositivo? Tendrás que volver a pegar el token para editar.'))return;
   try{localStorage.removeItem(TK)}catch(e){}
