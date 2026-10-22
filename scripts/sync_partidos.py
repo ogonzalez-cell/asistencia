@@ -1,4 +1,4 @@
-"""Sincroniza partidos.json con la agenda de la FCP (Júnior A del CP Sant Celoni).
+"""Sincroniza partidos.json con la agenda de la FCP (Júnior A y 2a Catalana del CP Sant Celoni).
 
 Lo ejecuta la GitHub Action .github/workflows/partidos.yml.
 Fuente: la misma petición que hace https://www.hoqueipatins.fecapa.cat/ag/
@@ -16,8 +16,8 @@ AG = "https://www.hoqueipatins.fecapa.cat/ag/"
 URL = "https://server2.sidgad.es/fecapa/00_fecapa_agenda_1.php"
 ID_TEMP_DEFECTO = "41"      # 2026/27, solo si no se puede leer de la web
 CLUB = "281"                # SANT CELONI, C.P.
-CATEGORIA = "JÚNIOR"        # cualquier competición que empiece así
-EQUIPO = "CP SANT CELONI A"
+# Equipos que se sincronizan: (código, competición que empieza por..., nombre del equipo en la FCP)
+EQUIPOS = [("JUN", "JÚNIOR", "CP SANT CELONI A"), ("2A", "2ª CATALANA", "CP SANT CELONI")]
 
 # 1a fase (grupo 4900): jornadas oficiales según rival. 2a vuelta = +7 con el campo al revés.
 GRUPO_1A_FASE = "4900"
@@ -25,7 +25,11 @@ PRIMERA = {"322": (1, True), "283": (2, False), "319": (3, True), "315": (4, Fal
            "304": (6, True), "252": (7, False)}
 VUELTA = 7
 POBLACIO = {"322": "Calafell", "283": "Sant Feliu de Codines", "319": "Ripoll", "315": "Olot",
-            "304": "Les Masies de Voltregà", "252": "Igualada", CLUB: "Sant Celoni"}
+            "304": "Les Masies de Voltregà", "252": "Igualada", CLUB: "Sant Celoni",
+            # 2a Catalana
+            "259": "Manlleu", "290": "Santa Margarida de Montbui", "243": "Centelles", "246": "Barcelona",
+            "311": "Girona", "332": "El Vendrell", "233": "Barberà del Vallès", "270": "Olesa de Montserrat",
+            "295": "Taradell", "317": "Ribes de Freser"}
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36",
@@ -75,12 +79,14 @@ def parse(page):
         if len(parts) < 5 or CLUB not in (parts[2], parts[3]):
             continue
         cells = [clean(c) for c in re.findall(r"<td[^>]*>(.*?)</td>", m.group(1), re.S | re.I)]
-        if len(cells) < 9 or not cells[0].upper().startswith(CATEGORIA):
+        if len(cells) < 9:
             continue
         home_id, away_id, grupo = parts[2], parts[3], parts[4]
         home = home_id == CLUB
-        if (cells[4] if home else cells[6]).upper() != EQUIPO:
-            continue  # otro equipo del club
+        nuestro = (cells[4] if home else cells[6]).upper()
+        team = next((t for t, cat, nom in EQUIPOS if cells[0].upper().startswith(cat) and nuestro == nom), None)
+        if not team:
+            continue  # otra competición u otro equipo del club
         rival_id = away_id if home else home_id
         try:
             d, mo, y = cells[1].split("/")
@@ -88,6 +94,7 @@ def parse(page):
             continue  # sin fecha todavía
         res = cells[7].replace(" ", "")
         out.append({
+            "team": team,
             "grupo": grupo,
             "date": f"{y}-{mo}-{d}",
             "time": cells[2],
@@ -111,6 +118,9 @@ def numerar(new, prev):
         p = prev_by_key.get(m["key"])
         if p:
             m["id"], m["jornada"] = p["id"], p.get("jornada")
+        elif m["team"] == "2A":  # 2a Catalana: sin número de jornada (hay descansos y aplazamientos)
+            m["id"], m["jornada"] = "2A-" + m["key"], None
+            continue
         elif m["grupo"] == GRUPO_1A_FASE and m["rivalId"] in PRIMERA:
             j, h = PRIMERA[m["rivalId"]]
             m["jornada"] = j if h == m["home"] else j + VUELTA
@@ -121,7 +131,7 @@ def numerar(new, prev):
         if m["jornada"]:
             usados.setdefault(m["grupo"], set()).add(m["jornada"])
     for m in new:  # grupos nuevos: siguiente número libre, por orden de fecha
-        if m["jornada"] is None:
+        if m["jornada"] is None and m["team"] != "2A":
             j = max(usados.get(m["grupo"], {0})) + 1
             m["jornada"] = j
             usados.setdefault(m["grupo"], set()).add(j)
@@ -156,7 +166,7 @@ def main():
         if (p["date"], p["time"]) != (m["date"], m["time"]) and p["date"] >= hoy:
             m["nota"] = "Cambio FCP: antes " + "/".join(reversed(p["date"].split("-")[1:])) + " " + p["time"]
     new.sort(key=lambda x: (x["date"], x["time"]))
-    out = {"source": "agenda FCP", "team": "Júnior A", "temporada": id_temp, "matches": new}
+    out = {"source": "agenda FCP", "team": "Júnior A + 2a Catalana", "temporada": id_temp, "matches": new}
     if {k: v for k, v in old.items() if k != "updated"} == out:
         print("Sin cambios")
         return
