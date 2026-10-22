@@ -309,6 +309,9 @@ li.ghead{list-style:none;padding:12px 4px 4px;font-size:.78rem;font-weight:700;c
     <h1 class="big" style="font-size:2.1rem;margin:6px 0 12px">Equipo</h1>
     <ul class="roster team" id="team"></ul>
     <div class="actions"><button class="btn" id="addP">Añadir persona</button></div>
+    <h2>Enlaces</h2>
+    <p class="hint muted" id="keyInfo">Los datos se guardan cifrados. Comparte el enlace con la clave: sin él, nadie puede leer el archivo de datos.</p>
+    <div class="actions"><button class="btn primary" id="lnkPub">Copiar enlace para compartir</button><button class="btn" id="lnkEd">Copiar enlace de edición</button></div>
     <div class="actions"><button class="btn danger" id="logout">Salir del modo edición en este dispositivo</button></div>
     <p class="hint muted">Los cambios de nombre se guardan solos. Si quitas a alguien, su historial se conserva en los CSV.</p>
   </section>
@@ -322,7 +325,7 @@ li.ghead{list-style:none;padding:12px 4px 4px;font-size:.78rem;font-weight:700;c
 </div></nav>
 <div class="savebar hidden" id="savebar"><div class="in"><span id="saveTxt">Cambios sin guardar</span><button class="ghost" id="discard">Descartar</button><button id="save">Guardar</button></div></div>
 <div class="toast" id="toast" role="status"></div></div>
-<script type="application/json" id="data">{"rev":6,"updated":"2026-09-30T13:37:19.773Z","players":[{"id":"p1","name":"Loann","active":true},{"id":"p2","name":"Aniol","active":true},{"id":"p3","name":"Miquel","active":true},{"id":"p4","name":"Pol","active":true},{"id":"p5","name":"Arnau","active":true},{"id":"p6","name":"Leo","active":true},{"id":"p7","name":"Jan","active":true},{"id":"p8","name":"Martí","active":true},{"id":"p9","name":"Alex","active":true},{"id":"p10","name":"Jofre","active":true}],"sessions":{"2026-09-28_E":{"id":"2026-09-28_E","date":"2026-09-28","type":"E","marks":{"p6":"P","p3":"P","p4":"P","p5":"P","p7":"P","p8":"P","p9":"P","p10":"P","p2":"P","p1":"F"},"fis":{"p6":true}},"2026-09-24_E":{"id":"2026-09-24_E","date":"2026-09-24","type":"E","marks":{"p1":"P","p2":"P","p3":"P","p4":"P","p5":"P","p6":"P","p9":"P","p10":"P"},"fis":{}}}}</script>
+<script type="application/json" id="data">{"rev":0,"sessions":{}}</script>
 <script>
 (function(){
 const TYPES={E:'Entreno',P:'Partido',O:'Otro'};
@@ -355,16 +358,37 @@ applyData(DATA);
 function token(){try{return localStorage.getItem(TK)}catch(e){return null}}
 function b64(s){return btoa(unescape(encodeURIComponent(s)))}
 function unb64(s){return decodeURIComponent(escape(atob(s.replace(/\s/g,''))))}
+/* ---------- cifrado de data.json (AES-GCM; la clave va en el enlace tras #k=) ---------- */
+const KK='asistencia-key';let NOKEY=false;
+const b64u=a=>btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+function keyStr(){try{return localStorage.getItem(KK)}catch(e){return null}}
+function newKey(){const k=b64u(crypto.getRandomValues(new Uint8Array(32)));try{localStorage.setItem(KK,k)}catch(e){};return k}
+async function aesKey(k){return crypto.subtle.importKey('raw',unb64u(k),'AES-GCM',false,['encrypt','decrypt'])}
+async function decryptData(d){
+  if(!d||!d.enc)return d;
+  const k=keyStr();if(!k){const e=new Error('nokey');e.nokey=true;throw e}
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64u(d.iv)},await aesKey(k),unb64u(d.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function encryptData(d){
+  const k=keyStr()||newKey(),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await aesKey(k),new TextEncoder().encode(JSON.stringify(d))));
+  return{enc:'A256GCM',rev:d.rev,updated:d.updated,iv:b64u(iv),ct:b64u(ct)};
+}
+function shareLink(edit){const k=keyStr();return location.origin+location.pathname+'#'+(edit?'editar&':'')+'k='+k}
 async function fetchRemote(t){
   const hd={'Accept':'application/vnd.github+json'};if(t)hd.Authorization='Bearer '+t;
   const r=await fetch(API+'?ref=main&t='+Date.now(),{headers:hd,cache:'no-store'});
   if(r.status===404)return{data:null,sha:null};
   if(!r.ok)throw new Error('http '+r.status);
-  const j=await r.json();return{data:JSON.parse(unb64(j.content)),sha:j.sha};
+  const j=await r.json();return{data:await decryptData(JSON.parse(unb64(j.content))),sha:j.sha};
 }
 async function loadRemote(){
+  NOKEY=false;
   try{const r=await fetchRemote(token());if(r.data){applyData(r.data);return true}}
-  catch(e){try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(r.ok){applyData(await r.json());return true}}catch(e2){}}
+  catch(e){if(e.nokey){NOKEY=true;return false}
+    try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(r.ok){applyData(await decryptData(await r.json()));return true}}catch(e2){if(e2.nokey)NOKEY=true}}
   return false;
 }
 
@@ -400,11 +424,11 @@ $('save').onclick=async()=>{
   const t=token();if(!t){toast('Falta el token de edición');return}
   $('save').disabled=true;$('saveTxt').textContent='Guardando…';
   try{
-    const cur=await fetchRemote(t);
+    let cur;try{cur=await fetchRemote(t)}catch(e){if(e.nokey){toast('Falta la clave de cifrado: abre el enlace de edición completo');$('saveTxt').textContent='Cambios sin guardar';return}throw e}
     const remoteRev=(cur.data&&cur.data.rev)||0;
     if(remoteRev>(DATA.rev||0)&&!confirm('Hay una versión más reciente guardada desde otro dispositivo. ¿Sobrescribirla con tus cambios?')){$('saveTxt').textContent='Cambios sin guardar';return}
     const data={rev:Math.max(DATA.rev||0,remoteRev)+1,updated:new Date().toISOString(),players,sessions:snapshot(),conv:convSnap(),matchAtt,extras};
-    const body={message:'Asistencia '+new Date().toLocaleString('es-ES'),content:b64(JSON.stringify(data,null,1)),branch:'main'};
+    const body={message:'Asistencia '+new Date().toLocaleString('es-ES'),content:b64(JSON.stringify(await encryptData(data))),branch:'main'};
     if(cur.sha)body.sha=cur.sha;
     const r=await fetch(API,{method:'PUT',headers:{Authorization:'Bearer '+t,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
     if(r.status===401||r.status===403){toast('Token no válido o caducado');$('saveTxt').textContent='Cambios sin guardar';return}
@@ -420,6 +444,9 @@ $('discard').onclick=()=>{
   try{localStorage.removeItem(LS)}catch(e){}
   applyData(DATA);dirty=false;$('savebar').classList.add('hidden');renderAll();
 };
+async function copyTxt(t){try{await navigator.clipboard.writeText(t);toast('Enlace copiado')}catch(e){prompt('Copia este enlace:',t)}}
+$('lnkPub').onclick=()=>{if(!keyStr())newKey();copyTxt(shareLink(false))};
+$('lnkEd').onclick=()=>{if(!keyStr())newKey();copyTxt(shareLink(true))};
 $('logout').onclick=()=>{
   if(!confirm('¿Quitar el modo edición de este dispositivo? Tendrás que volver a pegar el token para editar.'))return;
   try{localStorage.removeItem(TK)}catch(e){}
@@ -429,7 +456,9 @@ window.addEventListener('beforeunload',e=>{if(dirty&&canEdit){e.preventDefault()
 document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!dirty){if(await loadRemote()){$('sync').textContent=(canEdit?'Modo edición':'Solo lectura')+updatedTxt();renderAll()}}});
 
 async function connect(){
-  if(location.hash==='#editar'&&!token()){
+  const km=/[#&]k=([A-Za-z0-9_-]{40,})/.exec(location.hash);
+  if(km){try{localStorage.setItem(KK,km[1])}catch(e){};history.replaceState(null,'',location.pathname+(/editar/.test(location.hash)?'#editar':''))}
+  if(/editar/.test(location.hash)&&!token()){
     const t=(prompt('Pega tu token de GitHub (solo la primera vez en este dispositivo)')||'').trim();
     if(t){
       try{const r=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO,{headers:{Authorization:'Bearer '+t,'Accept':'application/vnd.github+json'}});
@@ -442,6 +471,7 @@ async function connect(){
   }
   await Promise.all([loadRemote(),loadMatches()]);
   if(token())setEditor();else setReadOnly();
+  if(NOKEY)$('sync').textContent='Datos protegidos: abre el enlace completo que te han compartido (con la clave)';
 }
 
 /* ---------- Semanas ---------- */
