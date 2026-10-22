@@ -1,6 +1,6 @@
 {
- "rev": 23,
- "updated": "2026-10-21T19:13:33.148Z",
+ "rev": 24,
+ "updated": "2026-10-22T13:22:08.260Z",
  "players": [
   {
    "id": "p1",
@@ -21,12 +21,14 @@
   {
    "id": "p4",
    "name": "Pol",
-   "active": true
+   "active": true,
+   "full": "Pol Dela"
   },
   {
    "id": "p5",
    "name": "Arnau",
-   "active": true
+   "active": true,
+   "full": "Arnau Bosch"
   },
   {
    "id": "p6",
@@ -319,6 +321,69 @@
    "p6",
    "p7",
    "p8"
+  ],
+  "2A-4873-322-281": [
+   "x4",
+   "p10",
+   "p9",
+   "p7",
+   "p5",
+   "p6",
+   "p2",
+   "x1"
+  ],
+  "2A-4873-290-281": [
+   "p1",
+   "p8",
+   "p2",
+   "p4",
+   "p9",
+   "x1",
+   "p7",
+   "x5"
   ]
- }
+ },
+ "extras": [
+  {
+   "id": "x5",
+   "name": "Arnau Costa",
+   "team": "JUV"
+  },
+  {
+   "id": "x6",
+   "name": "Quim Masdeu",
+   "team": "JUV"
+  },
+  {
+   "id": "x7",
+   "name": "Pol Busquets",
+   "team": "JUV"
+  },
+  {
+   "id": "x8",
+   "name": "Pol Castells",
+   "team": "JUV"
+  },
+  {
+   "id": "x1",
+   "name": "Miquel Molina",
+   "team": "SEN"
+  },
+  {
+   "id": "x2",
+   "name": "Blai Giró",
+   "team": "SEN"
+  },
+  {
+   "id": "x3",
+   "name": "Werner",
+   "team": "SEN"
+  },
+  {
+   "id": "x4",
+   "name": "Manel",
+   "team": "SEN",
+   "gk": true
+  }
+ ]
 }
