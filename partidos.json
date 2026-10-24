@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T13:23:13Z",
+ "updated": "2026-10-24T12:01:11Z",
  "source": "agenda FCP",
  "team": "Júnior A + 2a Catalana",
  "temporada": "41",
@@ -226,7 +226,7 @@
    "team": "JUN",
    "grupo": "4900",
    "date": "2026-11-22",
-   "time": "18:45",
+   "time": "11:15",
    "home": true,
    "rival": "CHP SANT FELIU",
    "rivalId": "283",
@@ -235,13 +235,14 @@
    "comp": "JÚNIOR OR 1",
    "key": "4900-281-283",
    "id": "JUN1-J9",
-   "jornada": 9
+   "jornada": 9,
+   "nota": "Cambio FCP: antes 22/11 18:45"
   },
   {
    "team": "2A",
    "grupo": "4873",
    "date": "2026-11-22",
-   "time": "20:15",
+   "time": "19:00",
    "home": true,
    "rival": "UEH BARBERÀ",
    "rivalId": "233",
@@ -250,7 +251,8 @@
    "comp": "2ª CATALANA GRUP D",
    "key": "4873-281-233",
    "id": "2A-4873-281-233",
-   "jornada": null
+   "jornada": null,
+   "nota": "Cambio FCP: antes 22/11 20:15"
   },
   {
    "team": "2A",
