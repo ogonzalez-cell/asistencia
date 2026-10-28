@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-26T14:17:45Z",
+ "updated": "2026-10-28T14:02:36Z",
  "source": "agenda FCP",
  "team": "Júnior A + 2a Catalana",
  "temporada": "41",
@@ -257,6 +257,22 @@
    "nota": "Cambio FCP: antes 22/11 20:15"
   },
   {
+   "team": "JUN",
+   "grupo": "4900",
+   "date": "2026-11-28",
+   "time": "14:10",
+   "home": false,
+   "rival": "HOQUEI CLUB RIPOLL",
+   "rivalId": "319",
+   "pista": "POLIESPORTIU RIPOLL",
+   "poblacio": "Ripoll",
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-319-281",
+   "id": "JUN1-J10",
+   "jornada": 10,
+   "nota": "Cambio FCP: antes 29/11 12:30"
+  },
+  {
    "team": "2A",
    "grupo": "4873",
    "date": "2026-11-28",
@@ -270,21 +286,6 @@
    "key": "4873-270-281",
    "id": "2A-4873-270-281",
    "jornada": null
-  },
-  {
-   "team": "JUN",
-   "grupo": "4900",
-   "date": "2026-11-29",
-   "time": "12:30",
-   "home": false,
-   "rival": "HOQUEI CLUB RIPOLL",
-   "rivalId": "319",
-   "pista": "POLIESPORTIU RIPOLL",
-   "poblacio": "Ripoll",
-   "comp": "JÚNIOR OR 1",
-   "key": "4900-319-281",
-   "id": "JUN1-J10",
-   "jornada": 10
   },
   {
    "team": "JUN",
