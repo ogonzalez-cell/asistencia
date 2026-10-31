@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28T14:02:36Z",
+ "updated": "2026-10-31T13:39:47Z",
  "source": "agenda FCP",
  "team": "Júnior A + 2a Catalana",
  "temporada": "41",
@@ -134,21 +134,6 @@
    "jornada": null
   },
   {
-   "team": "2A",
-   "grupo": "4873",
-   "date": "2026-10-30",
-   "time": "20:45",
-   "home": false,
-   "rival": "CLUB PATÍ CENTELLES",
-   "rivalId": "243",
-   "pista": "PAVELLÓ D ESPORTS DE CENTELLES",
-   "poblacio": "Centelles",
-   "comp": "2ª CATALANA GRUP D",
-   "key": "4873-243-281",
-   "id": "2A-4873-243-281",
-   "jornada": null
-  },
-  {
    "team": "JUN",
    "grupo": "4900",
    "date": "2026-10-31",
@@ -176,6 +161,21 @@
    "comp": "2ª CATALANA GRUP D",
    "key": "4873-281-311",
    "id": "2A-4873-281-311",
+   "jornada": null
+  },
+  {
+   "team": "2A",
+   "grupo": "4873",
+   "date": "2026-11-06",
+   "time": "20:45",
+   "home": false,
+   "rival": "CLUB PATÍ CENTELLES",
+   "rivalId": "243",
+   "pista": "PAVELLÓ D ESPORTS DE CENTELLES",
+   "poblacio": "Centelles",
+   "comp": "2ª CATALANA GRUP D",
+   "key": "4873-243-281",
+   "id": "2A-4873-243-281",
    "jornada": null
   },
   {
@@ -260,7 +260,7 @@
    "team": "JUN",
    "grupo": "4900",
    "date": "2026-11-28",
-   "time": "14:10",
+   "time": "14:00",
    "home": false,
    "rival": "HOQUEI CLUB RIPOLL",
    "rivalId": "319",
@@ -270,7 +270,7 @@
    "key": "4900-319-281",
    "id": "JUN1-J10",
    "jornada": 10,
-   "nota": "Cambio FCP: antes 29/11 12:30"
+   "nota": "Cambio FCP: antes 28/11 14:10"
   },
   {
    "team": "2A",
