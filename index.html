@@ -302,6 +302,7 @@ li.ghead{list-style:none;padding:12px 4px 4px;font-size:.78rem;font-weight:700;c
     <h2 id="calTit">Calendario Júnior A</h2>
     <div class="panel"><ul class="mlist" id="mlist"></ul></div>
     <p class="hint muted" id="mSrc"></p>
+    <div class="actions owner-act"><button class="btn" id="fcpSync">Actualizar calendario FCP</button></div>
   </section>
 
   <!-- EQUIPO -->
@@ -394,6 +395,66 @@ async function loadMatches(){
   try{const r=await fetch('https://raw.githubusercontent.com/'+OWNER+'/'+REPO+'/main/partidos.json?t='+Date.now(),{cache:'no-store'});if(r.ok){MATCHES=await r.json();return true}}catch(e){}
   return false;
 }
+/* ---------- sincronización del calendario con la agenda FCP (desde el navegador, en modo edición) ---------- */
+const FCP_URL='https://server2.sidgad.es/fecapa/00_fecapa_agenda_1.php',FCP_CLUB='281';
+const FCP_EQUIPOS=[['JUN','JÚNIOR','CP SANT CELONI A'],['2A','2ª CATALANA','CP SANT CELONI']];
+const FCP_1A='4900',FCP_VUELTA=7,FCP_PRIMERA={'322':[1,true],'283':[2,false],'319':[3,true],'315':[4,false],'304':[6,true],'252':[7,false]};
+const FCP_POB={'322':'Calafell','283':'Sant Feliu de Codines','319':'Ripoll','315':'Olot','304':'Les Masies de Voltregà','252':'Igualada','281':'Sant Celoni',
+ '259':'Manlleu','290':'Santa Margarida de Montbui','243':'Centelles','246':'Barcelona','311':'Girona','332':'El Vendrell','233':'Barberà del Vallès','270':'Olesa de Montserrat','295':'Taradell','317':'Ribes de Freser'};
+const _ta=document.createElement('textarea');
+function fcpClean(x){_ta.innerHTML=x.replace(/<[^>]+>/g,' ');return _ta.value.replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim()}
+function fcpTitle(x){return x.toLowerCase().replace(/(^|[^\p{L}])(\p{L})/gu,(a,b,c)=>b+c.toUpperCase())}
+function fcpParse(page){
+  const out=[],re=/<tr[^>]*class="fila_agenda[^"]*"[^>]*>([\s\S]*?)<\/tr>/gi;let m;
+  while((m=re.exec(page))){
+    const pg=/param_game="([^"]+)"/.exec(m[0]);if(!pg)continue;
+    const parts=pg[1].split('_');if(parts.length<5||(parts[2]!==FCP_CLUB&&parts[3]!==FCP_CLUB))continue;
+    const cells=[...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>fcpClean(x[1]));if(cells.length<9)continue;
+    const [hid,aid,grupo]=[parts[2],parts[3],parts[4]],home=hid===FCP_CLUB,nuestro=(home?cells[4]:cells[6]).toUpperCase();
+    const eq=FCP_EQUIPOS.find(([t,cat,nom])=>cells[0].toUpperCase().startsWith(cat)&&nuestro===nom);if(!eq)continue;
+    const rid=home?aid:hid,dm=cells[1].split('/');if(dm.length!==3)continue;
+    const res=cells[7].replace(/ /g,''),o={team:eq[0],grupo,date:dm[2]+'-'+dm[1]+'-'+dm[0],time:cells[2],home,rival:home?cells[6]:cells[4],rivalId:rid,pista:cells[8],
+      poblacio:FCP_POB[home?FCP_CLUB:rid]||fcpTitle(cells[8]),comp:cells[0],key:grupo+'-'+hid+'-'+aid};
+    if(/^\d+-\d+$/.test(res))o.res=res;out.push(o)}
+  return out.sort((a,b)=>(a.date+a.time)<(b.date+b.time)?-1:1);
+}
+function fcpNumerar(nw,prev){
+  const pk={};prev.forEach(p=>{if(p.key)pk[p.key]=p});const used={};
+  for(const m of nw){const p=pk[m.key];
+    if(p){m.id=p.id;m.jornada=p.jornada??null}
+    else if(m.team==='2A'){m.id='2A-'+m.key;m.jornada=null;continue}
+    else if(m.grupo===FCP_1A&&FCP_PRIMERA[m.rivalId]){const [j,h]=FCP_PRIMERA[m.rivalId];m.jornada=h===m.home?j:j+FCP_VUELTA;m.id='JUN1-J'+m.jornada}
+    else{m.id='G'+m.key;m.jornada=null}
+    if(m.jornada)(used[m.grupo]=used[m.grupo]||new Set()).add(m.jornada)}
+  for(const m of nw)if(m.jornada==null&&m.team!=='2A'){const s=used[m.grupo]||new Set([0]);m.jornada=Math.max(0,...s)+1;(used[m.grupo]=s).add(m.jornada)}
+}
+const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((r,x)=>(r[x]=v[x],r),{}):v);
+let fcpBusy=false;
+async function syncFCP(manual){
+  if(fcpBusy||!token())return;fcpBusy=true;
+  try{
+    const temp=String(MATCHES.temporada||'41');
+    const r=await fetch(FCP_URL,{method:'POST',body:new URLSearchParams({cliente:'fecapa',idm:'1',modal_temp:'',id_temp:temp})});
+    if(!r.ok)throw new Error('FCP '+r.status);
+    const nw=fcpParse(await r.text());if(!nw.length)throw new Error('sin partidos');
+    const prev=MATCHES.matches||[];fcpNumerar(nw,prev);
+    const pid={};prev.forEach(p=>pid[p.id]=p);const hoy=todayISO();
+    for(const m of nw){const p=pid[m.id];if(!p)continue;if(p.nota)m.nota=p.nota;
+      if((p.date!==m.date||p.time!==m.time)&&p.date>=hoy)m.nota='Cambio FCP: antes '+p.date.slice(8,10)+'/'+p.date.slice(5,7)+' '+p.time}
+    nw.sort((a,b)=>(a.date+a.time)<(b.date+b.time)?-1:1);
+    const out={source:'agenda FCP',team:'Júnior A + 2a Catalana',temporada:temp,matches:nw};
+    const old={...MATCHES};delete old.updated;
+    if(canon(old)===canon(out)){MATCHES.checked=new Date().toISOString();if(manual)toast('Calendario al día');return}
+    const full={updated:new Date().toISOString().replace(/\.\d+Z$/,'Z'),...out};
+    const api='https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/partidos.json',h={Authorization:'Bearer '+token(),Accept:'application/vnd.github+json'};
+    const cur=await fetch(api+'?ref=main&t='+Date.now(),{headers:h,cache:'no-store'});const sha=cur.ok?(await cur.json()).sha:undefined;
+    const put=await fetch(api,{method:'PUT',headers:h,body:JSON.stringify({message:'Partidos FCP '+todayISO(),content:b64(JSON.stringify(full,null,1)+'\n'),sha,branch:'main'})});
+    if(!put.ok)throw new Error('GitHub '+put.status);
+    MATCHES=full;if(view==='conv')renderConv();toast('Calendario FCP actualizado');
+  }catch(e){console.warn('sync FCP',e);if(manual)toast('No se pudo actualizar el calendario')}
+  finally{fcpBusy=false}
+}
+function autoSyncFCP(){const u=MATCHES.updated?Date.parse(MATCHES.updated):0;if(Date.now()-u>12*3600e3)syncFCP(false)}
 /* ---------- guardado ---------- */
 function snapshot(){const s={};Object.values(sessions).forEach(x=>{if(Object.keys(x.marks||{}).length||Object.keys(x.fis||{}).length)s[x.id]=x});return s}
 function convSnap(){const o={};Object.entries(conv).forEach(([k,v])=>{if(v&&v.length)o[k]=v});return o}
@@ -464,7 +525,7 @@ async function connect(){
     history.replaceState(null,'',location.pathname);
   }
   await Promise.all([loadRemote(),loadMatches()]);
-  if(token())setEditor();else setReadOnly();
+  if(token()){setEditor();autoSyncFCP()}else setReadOnly();
   if(NOKEY)$('sync').textContent='Datos protegidos: abre el enlace completo que te han compartido (con la clave)';
 }
 
@@ -730,6 +791,7 @@ function renderConvStats(){
   $('mlist').querySelectorAll('li').forEach((e,i)=>e.querySelector('b').textContent=mTitle(l[i]));
   $('mSrc').textContent=MATCHES.updated?'Calendario: '+(MATCHES.source||'FCP')+' · actualizado '+new Date(MATCHES.updated).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
 }
+$('fcpSync').onclick=()=>syncFCP(true);
 $('teamSeg').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b||b.dataset.t===curT)return;curT=b.dataset.t;curM=null;renderConv()});
 $('croster').addEventListener('click',e=>{
   if(!canEdit||!curM)return;
