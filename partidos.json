@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02T17:06:30Z",
+ "updated": "2026-11-10T17:43:03Z",
  "source": "agenda FCP",
  "team": "Júnior A + 2a Catalana",
  "temporada": "41",
@@ -177,6 +177,7 @@
    "poblacio": "Centelles",
    "comp": "2ª CATALANA GRUP D",
    "key": "4873-243-281",
+   "res": "1-4",
    "id": "2A-4873-243-281",
    "jornada": null
   },
@@ -192,6 +193,7 @@
    "poblacio": "Igualada",
    "comp": "JÚNIOR OR 1",
    "key": "4900-252-281",
+   "res": "0-4",
    "id": "JUN1-J7",
    "jornada": 7,
    "nota": "Cambio FCP: antes 08/11 19:00"
@@ -210,21 +212,6 @@
    "key": "4873-332-281",
    "id": "2A-4873-332-281",
    "jornada": null
-  },
-  {
-   "team": "JUN",
-   "grupo": "4900",
-   "date": "2026-11-14",
-   "time": "18:00",
-   "home": false,
-   "rival": "CLUB PATI CALAFELL",
-   "rivalId": "322",
-   "pista": "POLIESPORTIU MUNICIPAL DE CALAFELL",
-   "poblacio": "Calafell",
-   "comp": "JÚNIOR OR 1",
-   "key": "4900-322-281",
-   "id": "JUN1-J8",
-   "jornada": 8
   },
   {
    "team": "JUN",
@@ -262,7 +249,7 @@
    "team": "JUN",
    "grupo": "4900",
    "date": "2026-11-28",
-   "time": "14:00",
+   "time": "14:35",
    "home": false,
    "rival": "HOQUEI CLUB RIPOLL",
    "rivalId": "319",
@@ -272,7 +259,7 @@
    "key": "4900-319-281",
    "id": "JUN1-J10",
    "jornada": 10,
-   "nota": "Cambio FCP: antes 28/11 14:10"
+   "nota": "Cambio FCP: antes 28/11 14:00"
   },
   {
    "team": "2A",
@@ -292,8 +279,24 @@
   {
    "team": "JUN",
    "grupo": "4900",
+   "date": "2026-11-29",
+   "time": "10:00",
+   "home": false,
+   "rival": "CLUB PATI CALAFELL",
+   "rivalId": "322",
+   "pista": "POLIESPORTIU MUNICIPAL DE CALAFELL",
+   "poblacio": "Calafell",
+   "comp": "JÚNIOR OR 1",
+   "key": "4900-322-281",
+   "id": "JUN1-J8",
+   "jornada": 8,
+   "nota": "Cambio FCP: antes 14/11 18:00"
+  },
+  {
+   "team": "JUN",
+   "grupo": "4900",
    "date": "2026-12-06",
-   "time": "18:45",
+   "time": "18:00",
    "home": true,
    "rival": "CH OLOT",
    "rivalId": "315",
@@ -302,7 +305,8 @@
    "comp": "JÚNIOR OR 1",
    "key": "4900-281-315",
    "id": "JUN1-J11",
-   "jornada": 11
+   "jornada": 11,
+   "nota": "Cambio FCP: antes 06/12 18:45"
   },
   {
    "team": "JUN",
