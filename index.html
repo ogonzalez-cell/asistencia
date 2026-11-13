@@ -248,12 +248,20 @@ li.ghead{list-style:none;padding:12px 4px 4px;font-size:.78rem;font-weight:700;c
     </div>
     <div class="kpis">
       <div class="kpi"><b id="kS">0</b><span>sesiones</span></div>
-      <div class="kpi"><b id="kA">–</b><span>asistencia media</span></div>
+      <div class="kpi"><b id="kA">–</b><span>faltas de media</span></div>
       <div class="kpi"><b id="kF">0</b><span>físicos totales</span></div>
+    </div>
+    <div class="actions owner-act" style="margin-top:12px"><button class="btn primary" id="resBtn">Resum setmanal</button></div>
+    <div class="panel owner-act hidden" id="resBox" style="margin-top:12px">
+      <b>Resum de la setmana per al grup</b>
+      <textarea id="resTxt" rows="14" style="width:100%;margin-top:8px;font:inherit;font-size:.95rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></textarea>
+      <div class="actions" style="margin-top:8px"><button class="btn primary" id="resCopy">Copiar</button><button class="btn" id="resShare">Compartir…</button></div>
+      <p class="hint muted">Setmana de dijous a dimecres. Pots retocar el text abans d'enviar-lo.</p>
     </div>
 
     <h2>Por persona</h2>
     <div class="panel" id="bars"></div>
+    <p class="hint muted">% faltas = faltas y justificadas por otro motivo, sobre los entrenos que podía hacer. Las ausencias por lesión, estudios o enfermedad no cuentan.</p>
     <div class="legend"><span><i style="background:var(--ok)"></i>Presente</span><span><i style="background:var(--exc)"></i>Inevitable (lesión, estudios, enfermedad)</span><span><i style="background:var(--just)"></i>Justificada (otro)</span><span><i style="background:var(--no)"></i>Falta</span></div>
 
     <h2>Evolución semanal</h2>
@@ -649,14 +657,15 @@ function renderStats(){
   renderPre();
   const list=filtered(),rows=perPlayer(list).filter(r=>r.p.active!==false||r.n);
   $('kS').textContent=list.length;
-  let tp=0,tn=0,tfis=0;rows.forEach(r=>{tp+=r.c.P;tn+=r.n;tfis+=r.fis});
-  $('kA').textContent=tn?Math.round(tp/tn*100)+'%':'–';$('kF').textContent=tfis;
+  let tf=0,tn=0,tfis=0;rows.forEach(r=>{tf+=r.c.F+r.c.J;tn+=r.n-r.c.I;tfis+=r.fis});
+  $('kA').textContent=tn?Math.round(tf/tn*100)+'%':'–';$('kF').textContent=tfis;
   if(!list.length){$('bars').innerHTML='<div class="empty">Aún no hay sesiones en este filtro.</div>'}
   else{
-    rows.sort((a,b)=>(b.pct??-1)-(a.pct??-1));
-    $('bars').innerHTML=rows.map(r=>{const w=k=>(r.n?r.c[k]/r.n*100:0)+'%';return `<div class="bar"><div class="top"><span class="nm"></span><b>${r.pct==null?'–':r.pct+'%'}${r.c.I&&r.pctR!=null?` <small style="color:var(--exc);font-weight:600">· ${r.pctR}% sin inevitables</small>`:''}</b></div>
+    rows.forEach(r=>{const d=r.n-r.c.I;r.pf=d?Math.round((r.c.F+r.c.J)/d*100):null});
+    rows.sort((a,b)=>(a.pf??999)-(b.pf??999)||a.p.name.localeCompare(b.p.name,'es'));
+    $('bars').innerHTML=rows.map(r=>{const w=k=>(r.n?r.c[k]/r.n*100:0)+'%';return `<div class="bar"><div class="top"><span class="nm"></span><b>${r.pf==null?'–':r.pf+'% faltas'}</b></div>
       <div class="track"><span style="width:${w('P')};background:var(--ok)"></span><span style="width:${w('I')};background:var(--exc)"></span><span style="width:${w('J')};background:var(--just)"></span><span style="width:${w('F')};background:var(--no)"></span></div>
-      <div class="sub">${r.c.P} presente${r.c.I?` · <span style="color:var(--exc)">${Object.entries(r.why).map(([k,v])=>v+' '+WHY[k].toLowerCase()).join(', ')}</span>`:''} · ${r.c.J} justif. · ${r.c.F} falta · <strong>físico ${r.fis}/${r.fisN}</strong></div></div>`}).join('');
+      <div class="sub">${r.c.P} presente${r.c.I?` · <span style="color:var(--exc)">${Object.entries(r.why).map(([k,v])=>v+' '+WHY[k].toLowerCase()).join(', ')} (no cuenta)</span>`:''} · ${r.c.J} justif. · ${r.c.F} falta · <strong>físico ${r.fis}/${r.fisN}</strong></div></div>`}).join('');
     $('bars').querySelectorAll('.nm').forEach((e,i)=>e.textContent=rows[i].p.name+(rows[i].p.active===false?' (baja)':''));
   }
   renderLine(byWeek(list));
@@ -831,6 +840,31 @@ $('expConv').onclick=()=>{
   const csv='\ufeff'+rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='convocatorias.csv';document.body.appendChild(a);a.click();a.remove();
 };
+
+/* ---------- Resum setmanal (català) ---------- */
+const DCAT=['dg','dl','dt','dc','dj','dv','ds'];
+const WCAT={L:['🩹','Lesió'],E:['📚','Estudis'],M:['🤒','Malaltia']};
+function resumText(){
+  const ws=weekStart(todayISO()),we=shiftDay(ws,6);
+  const ses=Object.values(sessions).filter(s=>s.type==='E'&&s.date>=ws&&s.date<=we&&hasData(s)).sort((a,b)=>a.date<b.date?-1:1);
+  const dd=x=>x.slice(8,10)+'/'+x.slice(5,7),dia=x=>DCAT[new Date(x+'T12:00:00').getDay()]+' '+(+x.slice(8,10));
+  let t='📋 Assistència setmana '+dd(ws)+'–'+dd(we)+' ('+ses.length+' entreno'+(ses.length===1?'':'s')+')\n\n';
+  if(!ses.length)return t+'Encara no hi ha entrenos registrats aquesta setmana.';
+  const pl=active(),tots=[],falt=[],inev={};
+  pl.forEach(p=>{const miss=[];let okN=0;
+    ses.forEach(s=>{const st=stOf(s,p.id);if(st==='P')okN++;else if(st==='I'){const w=whyOf(s,p.id);(inev[w]=inev[w]||new Set()).add(p.name)}else if(st==='F'||st==='J')miss.push(dia(s.date)+(st==='J'?' just.':''))});
+    if(okN===ses.length)tots.push(p.name);if(miss.length)falt.push([p.name,miss])});
+  if(tots.length)t+='✅ Tots els entrenos: '+tots.join(', ')+'\n';
+  if(falt.length){falt.sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],'ca'));t+='⚠️ Faltes:\n'+falt.map(([n,m])=>'• '+n+' – '+m.length+' ('+m.join(', ')+')').join('\n')+'\n'}
+  Object.entries(inev).forEach(([w,set])=>{const x=WCAT[w]||['•',w];t+=x[0]+' '+x[1]+': '+[...set].join(', ')+'\n'});
+  const all=Object.values(sessions).filter(s=>s.type==='E'&&hasData(s)&&s.date<=we);
+  const rows=perPlayer(all).filter(r=>r.p.active!==false).map(r=>{const d=r.n-r.c.I;return[r.p.name,d?Math.round((r.c.F+r.c.J)/d*100):null]}).filter(r=>r[1]!=null).sort((a,b)=>a[1]-b[1]||a[0].localeCompare(b[0],'ca'));
+  if(rows.length)t+='\n% faltes temporada: '+rows.map(r=>r[0]+' '+r[1]+'%').join(' · ');
+  return t;
+}
+$('resBtn').onclick=()=>{$('resTxt').value=resumText();$('resBox').classList.remove('hidden');$('resBox').scrollIntoView({behavior:'smooth',block:'center'})};
+$('resCopy').onclick=async()=>{const t=$('resTxt').value;try{await navigator.clipboard.writeText(t);toast('Copiat')}catch(e){$('resTxt').select();document.execCommand('copy');toast('Copiat')}};
+$('resShare').onclick=async()=>{const t=$('resTxt').value;if(navigator.share){try{await navigator.share({text:t})}catch(e){}}else{try{await navigator.clipboard.writeText(t);toast('Copiat')}catch(e){}}};
 
 /* ---------- Equipo ---------- */
 function renderTeam(){
