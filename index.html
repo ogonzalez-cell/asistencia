@@ -256,7 +256,7 @@ li.ghead{list-style:none;padding:12px 4px 4px;font-size:.78rem;font-weight:700;c
       <b>Resum de la setmana per al grup</b>
       <textarea id="resTxt" rows="14" style="width:100%;margin-top:8px;font:inherit;font-size:.95rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></textarea>
       <div class="actions" style="margin-top:8px"><button class="btn primary" id="resCopy">Copiar</button><button class="btn" id="resShare">Compartir…</button></div>
-      <p class="hint muted">Setmana de dijous a dimecres. Pots retocar el text abans d'enviar-lo.</p>
+      <p class="hint muted">Setmana de dijous a dimecres: el dimecres surt la setmana en curs; els altres dies, l'última setmana acabada. Pots retocar el text abans d'enviar-lo.</p>
     </div>
 
     <h2>Por persona</h2>
@@ -845,7 +845,7 @@ $('expConv').onclick=()=>{
 const DCAT=['dg','dl','dt','dc','dj','dv','ds'];
 const WCAT={L:['🩹','Lesió'],E:['📚','Estudis'],M:['🤒','Malaltia']};
 function resumText(){
-  const ws=weekStart(todayISO()),we=shiftDay(ws,6);
+  let ws=weekStart(todayISO());if(todayISO()!==shiftDay(ws,6))ws=shiftDay(ws,-7);const we=shiftDay(ws,6);
   const ses=Object.values(sessions).filter(s=>s.type==='E'&&s.date>=ws&&s.date<=we&&hasData(s)).sort((a,b)=>a.date<b.date?-1:1);
   const dd=x=>x.slice(8,10)+'/'+x.slice(5,7),dia=x=>DCAT[new Date(x+'T12:00:00').getDay()]+' '+(+x.slice(8,10));
   let t='📋 Assistència setmana '+dd(ws)+'–'+dd(we)+' ('+ses.length+' entreno'+(ses.length===1?'':'s')+')\n\n';
