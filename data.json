@@ -1,6 +1,6 @@
 {
- "rev": 81,
- "updated": "2026-11-19T09:44:47.167Z",
+ "rev": 82,
+ "updated": "2026-11-19T09:46:15.284Z",
  "players": [
   {
    "id": "p1",
@@ -737,6 +737,11 @@
    "name": "Manel",
    "team": "SEN",
    "gk": true
+  },
+  {
+   "id": "x9",
+   "name": "Jordi Paituvi",
+   "team": "SEN"
   }
  ]
 }
