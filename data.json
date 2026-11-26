@@ -1,6 +1,6 @@
 {
- "rev": 92,
- "updated": "2026-11-25T20:12:33.581Z",
+ "rev": 93,
+ "updated": "2026-11-26T10:07:27.266Z",
  "players": [
   {
    "id": "p1",
@@ -786,6 +786,16 @@
   {
    "id": "x8",
    "name": "Pol Castells",
+   "team": "JUV"
+  },
+  {
+   "id": "x10",
+   "name": "Marçal",
+   "team": "JUV"
+  },
+  {
+   "id": "x11",
+   "name": "Marcel",
    "team": "JUV"
   },
   {
